@@ -68,6 +68,7 @@
     <input id="device" type="text" autocomplete="off">
     <label for="watchers">Watcher keys (npub), one per line</label>
     <textarea id="watchers" spellcheck="false"></textarea>
+    <div id="watchList" class="hint"></div>
     <label for="relays">Relays, one per line</label>
     <textarea id="relays" spellcheck="false"></textarea>
     <div class="check"><input id="useLocation" type="checkbox"><label for="useLocation" style="margin:0;color:inherit;font-size:15px">Include location</label></div>
@@ -94,6 +95,7 @@
   <section id="main" hidden>
     <button id="sync" type="button">Hold to sync</button>
     <div id="status"></div>
+    <div id="watchState" class="hint" style="text-align:center"></div>
     <div class="timer">
       <div class="label">Timer</div>
       <div id="timerStart" class="row3">
