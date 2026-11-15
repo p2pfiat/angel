@@ -71,8 +71,16 @@
     <label for="relays">Relays, one per line</label>
     <textarea id="relays" spellcheck="false"></textarea>
     <div class="check"><input id="useLocation" type="checkbox"><label for="useLocation" style="margin:0;color:inherit;font-size:15px">Include location</label></div>
-    <label>Shortcut topic (for the watchers' config; keep it secret)</label>
-    <div id="topic" class="mono"></div>
+    <label for="topic">Shortcut topic (keep it secret; the same as in your watchers' config)</label>
+    <input id="topic" type="text" class="mono" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="row3" style="margin-top:10px">
+      <button id="copyTopic" type="button">Copy topic</button>
+    </div>
+    <div class="row3" id="shortcutLinks" style="margin-top:10px" hidden>
+      <button id="addDuress" type="button">Add Duress shortcut</button>
+      <button id="addOk" type="button">Add OK shortcut</button>
+    </div>
+    <p class="hint" id="topicHint">Adding a shortcut asks for the topic: paste it, it is already copied.</p>
     <div class="check"><input id="autoSend" type="checkbox"><label for="autoSend" style="margin:0;color:inherit;font-size:15px">Send as soon as the app opens</label></div>
     <p class="hint">With this on, opening the app is the signal. Opening it again within a minute sends nothing.</p>
     <div class="err" id="setupError"></div>
