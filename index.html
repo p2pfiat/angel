@@ -56,22 +56,50 @@
   .row3 { display: flex; gap: 10px; }
   .row3 button { flex: 1; background: var(--card); color: var(--fg); border: 1px solid var(--line); }
   #timerText { font-size: 17px; margin-bottom: 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 14px; }
+  .card h2 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+  .card p { margin: 0 0 10px; }
+  #angelQr { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 6px; }
+  #angelLink { margin-top: 10px; }
+  details { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 10px; }
+  summary { font-size: 15px; color: var(--muted); cursor: pointer; padding: 6px 0; }
+  h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 22px 0 0; text-transform: uppercase; letter-spacing: .04em; }
 </style>
 </head>
 <body>
 <main>
   <section id="setup" hidden>
-    <h1>Setup</h1>
+    <h1>Settings</h1>
+    <div class="card" id="angelCard">
+      <h2>Become my angel</h2>
+      <div id="angelReady" hidden>
+        <p class="hint">Let someone scan this, or send them the link. They get your alarms on Telegram; your current angels approve them first.</p>
+        <canvas id="angelQr" aria-label="QR code of your angel link"></canvas>
+        <div class="row3">
+          <button id="angelShare" type="button">Share link</button>
+          <button id="angelCopy" type="button">Copy link</button>
+        </div>
+        <p class="hint" id="angelHint"></p>
+        <div id="angelLink" class="mono"></div>
+      </div>
+      <p class="hint" id="angelNone">No link yet. It comes from your servers when they answer; that needs a server with a Telegram bot.</p>
+    </div>
+    <h3>Servers</h3>
+    <div id="watchList" class="hint"></div>
+    <h3>Options</h3>
+    <div class="check"><input id="useLocation" type="checkbox"><label for="useLocation" style="margin:0;color:inherit;font-size:15px">Include location</label></div>
+    <div class="check"><input id="autoSend" type="checkbox"><label for="autoSend" style="margin:0;color:inherit;font-size:15px">Send as soon as the app opens</label></div>
+    <p class="hint">With this on, opening the app is the signal. Opening it again within a minute sends nothing.</p>
+    <details id="advanced">
+    <summary>Advanced</summary>
     <label>This device's key (add it to your watchers)</label>
     <div id="npub" class="mono"></div>
     <label for="device">Device name shown to contacts</label>
     <input id="device" type="text" autocomplete="off">
     <label for="watchers">Watcher keys (npub), one per line</label>
     <textarea id="watchers" spellcheck="false"></textarea>
-    <div id="watchList" class="hint"></div>
     <label for="relays">Relays, one per line</label>
     <textarea id="relays" spellcheck="false"></textarea>
-    <div class="check"><input id="useLocation" type="checkbox"><label for="useLocation" style="margin:0;color:inherit;font-size:15px">Include location</label></div>
     <label for="topic">Shortcut topic (keep it secret; the same as in your watchers' config)</label>
     <input id="topic" type="text" class="mono" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="row3" style="margin-top:10px">
@@ -82,12 +110,11 @@
       <button id="addOk" type="button">Add OK shortcut</button>
     </div>
     <p class="hint" id="topicHint">Adding a shortcut asks for the topic: paste it, it is already copied.</p>
-    <div class="check"><input id="autoSend" type="checkbox"><label for="autoSend" style="margin:0;color:inherit;font-size:15px">Send as soon as the app opens</label></div>
-    <p class="hint">With this on, opening the app is the signal. Opening it again within a minute sends nothing.</p>
+    <div class="row"><button class="plain" id="newKey" type="button">New key</button></div>
+    </details>
     <div class="err" id="setupError"></div>
-    <p class="hint" id="version"></p>
     <div class="row">
-      <button class="plain" id="newKey" type="button">New key</button>
+      <span class="hint" id="version"></span>
       <button id="save" type="button">Save</button>
     </div>
   </section>
