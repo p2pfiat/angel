@@ -63,6 +63,13 @@
   #angelLink { margin-top: 10px; }
   details { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 10px; }
   summary { font-size: 15px; color: var(--muted); cursor: pointer; padding: 6px 0; }
+  .angel { border-top: 1px solid var(--line); padding: 10px 0; }
+  .angel:first-child { border-top: 0; }
+  .angelTop { display: flex; gap: 10px; align-items: center; }
+  .angelTop input { flex: 1; }
+  .angelBoxes { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+  .angelBoxes label { display: flex; gap: 6px; align-items: center; margin: 0; font-size: 14px; color: var(--fg); }
+  .angel.removed input[type=text], .angel.removed .angelBoxes { opacity: .35; text-decoration: line-through; }
   h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 22px 0 0; text-transform: uppercase; letter-spacing: .04em; }
 </style>
 </head>
@@ -73,7 +80,7 @@
     <div class="card" id="angelCard">
       <h2>Become my angel</h2>
       <div id="angelReady" hidden>
-        <p class="hint">Let someone scan this, or send them the link. They get your alarms on Telegram; your current angels approve them first.</p>
+        <p class="hint">Let someone scan this, or send them the link. They tap Start in Telegram and get your alarms from then on; you see them below.</p>
         <canvas id="angelQr" aria-label="QR code of your angel link"></canvas>
         <div class="row3">
           <button id="angelShare" type="button">Share link</button>
@@ -83,6 +90,12 @@
         <div id="angelLink" class="mono"></div>
       </div>
       <p class="hint" id="angelNone">No link yet. It comes from your servers when they answer; that needs a server with a Telegram bot.</p>
+    </div>
+    <div class="card">
+      <h2>My angels</h2>
+      <div id="angelList"></div>
+      <p class="hint" id="angelsNone">No angels yet, or your servers have not sent the list.</p>
+      <p class="hint" style="margin:8px 0 0">Duress alarms go to every active angel. Changes are sent when you press Save.</p>
     </div>
     <h3>Servers</h3>
     <div id="watchList" class="hint"></div>
