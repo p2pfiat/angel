@@ -70,11 +70,43 @@
   .angelBoxes { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
   .angelBoxes label { display: flex; gap: 6px; align-items: center; margin: 0; font-size: 14px; color: var(--fg); }
   .angel.removed input[type=text], .angel.removed .angelBoxes { opacity: .35; text-decoration: line-through; }
+  .alarmText { white-space: pre-wrap; -webkit-user-select: text; user-select: text; }
+  .tabs { display: flex; gap: 8px; margin: 8px 0 4px; }
+  .tabs button { flex: 1; padding: 8px; background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+  .tabs button.on { color: var(--fg); border-color: var(--accent); }
+  .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; }
   h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 22px 0 0; text-transform: uppercase; letter-spacing: .04em; }
 </style>
 </head>
 <body>
 <main>
+  <section id="angelJoin" hidden>
+    <h1>Be an angel</h1>
+    <p id="ajText"></p>
+    <div id="ajForm" hidden>
+      <label for="ajName">Your name, as they will see it</label>
+      <input id="ajName" type="text" autocomplete="name">
+      <p class="hint">Next, allow notifications: that is how alarms reach you.</p>
+      <div class="row"><span></span><button id="ajGo" type="button">Join and allow notifications</button></div>
+    </div>
+    <div id="ajInstall" hidden>
+      <p class="hint">On an iPhone, alarms arrive only in the app on the Home Screen: tap Share, then "Add to Home Screen". Open Sync from there; if it does not show this invite, use "Paste invite" in Settings.</p>
+      <div class="row3"><button id="ajCopy" type="button">Copy invite</button></div>
+    </div>
+    <div id="ajList" class="hint" style="margin-top:12px"></div>
+    <div class="err" id="ajError"></div>
+  </section>
+
+  <section id="angel" hidden>
+    <h1>Angel</h1>
+    <p id="angelFor"></p>
+    <p class="hint" id="angelNotifyState"></p>
+    <div class="row3"><button id="angelNotify" type="button" hidden>Turn on notifications</button></div>
+    <p class="hint" id="angelNote"></p>
+    <div id="angelAlarms"></div>
+    <div class="row"><button class="plain" id="angelRefresh" type="button">Refresh</button><button class="plain" id="angelSettings" type="button">Settings</button></div>
+  </section>
+
   <section id="join" hidden>
     <h1>You are invited</h1>
     <p id="joinText"></p>
@@ -107,6 +139,10 @@
     </div>
     <div class="card" id="angelCard">
       <h2>Become my angel</h2>
+      <div class="tabs">
+        <button id="angelUseApp" type="button">In this app</button>
+        <button id="angelUseTg" type="button">On Telegram</button>
+      </div>
       <div id="angelReady" hidden>
         <p class="hint" id="angelIntro">Let someone scan this, or send them the link. They tap Start in Telegram and get your alarms from then on; you see them below.</p>
         <canvas id="angelQr" aria-label="QR code of your angel link"></canvas>
@@ -117,7 +153,12 @@
         <p class="hint" id="angelHint"></p>
         <div id="angelLink" class="mono"></div>
       </div>
-      <p class="hint" id="angelNone">No link yet. It comes from your servers when they answer; that needs a server with a Telegram bot.</p>
+      <p class="hint" id="angelNone">No link yet. It comes from your servers when they answer.</p>
+    </div>
+    <div class="card" id="beAngelCard" hidden>
+      <h2>You are an angel</h2>
+      <p class="hint" id="beAngelText"></p>
+      <div class="row3"><button id="beAngelOpen" type="button">Open</button></div>
     </div>
     <div class="card">
       <h2>My angels</h2>

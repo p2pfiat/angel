@@ -1,7 +1,7 @@
 // Offline cache. Network first: with a connection the app always gets the newest files
 // (and refreshes the cache); without one it runs from the cache. Bump CACHE with each release
 // so old copies are dropped.
-const CACHE = 'sync-v12'
+const CACHE = 'sync-v13'
 const FILES = ['./', './index.html', './app.js', './manifest.webmanifest']
 
 self.addEventListener('install', (e) => {
@@ -39,6 +39,41 @@ async function networkFirst(request) {
     throw new Error('offline and not cached')
   }
 }
+
+// An alarm for an angel (Web Push from a watcher). Shown even when the app is closed.
+self.addEventListener('push', (e) => {
+  let d = {}
+  try {
+    d = e.data ? e.data.json() : {}
+  } catch {}
+  const urgent = d.kind === 'duress' || d.kind === 'missed'
+  e.waitUntil(
+    self.registration.showNotification(d.title || 'Alarm', {
+      body: d.body || '',
+      tag: d.id || 'alarm',
+      renotify: true,
+      requireInteraction: urgent,
+      data: { id: d.id || '' },
+    }),
+  )
+})
+
+// Tapping it opens the angel screen.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  const url = new URL('./#angel', self.registration.scope).href
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ws) => {
+      for (const w of ws) {
+        if ('focus' in w) {
+          w.postMessage({ open: 'angel' })
+          return w.focus()
+        }
+      }
+      return self.clients.openWindow(url)
+    }),
+  )
+})
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url)
