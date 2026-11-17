@@ -1,7 +1,7 @@
 // Offline cache. Network first: with a connection the app always gets the newest files
 // (and refreshes the cache); without one it runs from the cache. Bump CACHE with each release
 // so old copies are dropped.
-const CACHE = 'sync-v15'
+const CACHE = 'sync-v16'
 const FILES = ['./', './index.html', './app.js', './manifest.webmanifest']
 
 self.addEventListener('install', (e) => {

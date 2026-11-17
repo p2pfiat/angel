@@ -113,10 +113,10 @@
   </section>
 
   <section id="join" hidden>
-    <h1>You are invited</h1>
+    <h1 id="joinTitle">You are invited</h1>
     <p id="joinText"></p>
     <div id="joinHere">
-      <label for="joinName">Your name, as your angels will see it</label>
+      <label for="joinName" id="joinLabel">Your name, as your angels will see it</label>
       <input id="joinName" type="text" autocomplete="name">
       <div class="row">
         <button class="plain" id="joinLater" type="button">Not now</button>
@@ -175,6 +175,20 @@
       <div id="angelList"></div>
       <p class="hint" id="angelsNone">No angels yet, or your servers have not sent the list.</p>
       <p class="hint" style="margin:8px 0 0">Duress alarms go to every active angel. Changes are sent when you press Save.</p>
+    </div>
+    <div class="card" id="phonesCard" hidden>
+      <h2>My phones</h2>
+      <p class="hint">The phones and computers that can send your alarms. Lost one? Remove it, then tap Save.</p>
+      <div id="phoneList"></div>
+      <div class="row3"><button id="phoneGo" type="button">Add a phone</button></div>
+      <div id="phoneMsg" class="hint" style="margin-top:8px"></div>
+      <div id="phoneReady" hidden>
+        <canvas id="phoneQr" aria-label="QR code to add a phone"></canvas>
+        <div class="row3">
+          <button id="phoneShare" type="button">Share link</button>
+          <button id="phoneCopy" type="button">Copy link</button>
+        </div>
+      </div>
     </div>
     <div class="card" id="protectCard">
       <h2>Protect someone</h2>
