@@ -1,7 +1,7 @@
 // Offline cache. Network first: with a connection the app always gets the newest files
 // (and refreshes the cache); without one it runs from the cache. Bump CACHE with each release
 // so old copies are dropped.
-const CACHE = 'sync-v14'
+const CACHE = 'sync-v15'
 const FILES = ['./', './index.html', './app.js', './manifest.webmanifest']
 
 self.addEventListener('install', (e) => {
@@ -47,14 +47,23 @@ self.addEventListener('push', (e) => {
     d = e.data ? e.data.json() : {}
   } catch {}
   const urgent = d.kind === 'duress' || d.kind === 'missed'
+  const tag = d.id || 'alarm'
+  // The same alarm can come from two watchers: the second one replaces the first quietly
+  // (a push must always show something, so it is shown again, not dropped).
   e.waitUntil(
-    self.registration.showNotification(d.title || 'Alarm', {
-      body: d.body || '',
-      tag: d.id || 'alarm',
-      renotify: true,
-      requireInteraction: urgent,
-      data: { id: d.id || '' },
-    }),
+    self.registration
+      .getNotifications({ tag })
+      .catch(() => [])
+      .then((open) =>
+        self.registration.showNotification(d.title || 'Alarm', {
+          body: d.body || '',
+          tag,
+          renotify: !open.length,
+          silent: open.length > 0,
+          requireInteraction: urgent,
+          data: { id: d.id || '' },
+        }),
+      ),
   )
 })
 
