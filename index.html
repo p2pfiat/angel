@@ -90,7 +90,12 @@
       <div class="row"><span></span><button id="ajGo" type="button">Join and allow notifications</button></div>
     </div>
     <div id="ajInstall" hidden>
-      <p class="hint">On an iPhone, alarms arrive only in the app on the Home Screen: tap Share, then "Add to Home Screen". Open Sync from there; if it does not show this invite, use "Paste invite" in Settings.</p>
+      <p class="hint">On an iPhone, alarms arrive only in Sync on the Home Screen:</p>
+      <ol class="hint">
+        <li>Tap <b>Copy invite</b>.</li>
+        <li>No Sync on your Home Screen yet? Tap Share, then "Add to Home Screen".</li>
+        <li>Open Sync from the Home Screen. If it does not show this invite by itself, go to Settings and tap <b>Paste invite</b>.</li>
+      </ol>
       <div class="row3"><button id="ajCopy" type="button">Copy invite</button></div>
     </div>
     <div id="ajList" class="hint" style="margin-top:12px"></div>
@@ -119,7 +124,11 @@
       </div>
     </div>
     <div id="joinInstall" hidden>
-      <p class="hint">First add Sync to your Home Screen: tap Share, then "Add to Home Screen". Open Sync from there. If it does not show this invite, tap "Paste invite" in Settings.</p>
+      <ol class="hint">
+        <li>Tap <b>Copy invite</b>.</li>
+        <li>Tap Share, then "Add to Home Screen".</li>
+        <li>Open Sync from the Home Screen. If it does not show this invite by itself, tap <b>Paste invite</b>.</li>
+      </ol>
       <div class="row3"><button id="joinCopy" type="button">Copy invite</button></div>
     </div>
     <div id="joinList" class="hint" style="margin-top:12px"></div>
@@ -128,8 +137,9 @@
 
   <section id="setup" hidden>
     <h1>Settings</h1>
-    <div class="card" id="pasteCard" hidden>
+    <div class="card" id="pasteCard">
       <h2>Got an invite?</h2>
+      <p class="hint">To be someone's angel, or to be protected: copy the link you got, then tap Paste invite.</p>
       <input id="pasteText" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Invite link">
       <div class="row3" style="margin-top:10px">
         <button id="pastePaste" type="button">Paste invite</button>
