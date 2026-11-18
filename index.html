@@ -12,71 +12,114 @@
 <title>Sync</title>
 <style>
   :root {
-    --bg: #f6f6f4; --fg: #1d1d1b; --muted: #77776f; --line: #dcdcd6; --card: #ffffff; --accent: #3b5b7a;
+    --bg: #f6f6f4; --fg: #1d1d1b; --muted: #5f5f58; --line: #d6d6cf; --card: #ffffff; --accent: #3b5b7a;
+    --ok: #2e8540; --warn: #b7791f; --bad: #c0392b; --tap: 44px;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #161615; --fg: #ececea; --muted: #8e8e86; --line: #2c2c2a; --card: #1f1f1d; --accent: #8fb0cf; }
+    :root { --bg: #161615; --fg: #ececea; --muted: #a3a39b; --line: #33332f; --card: #1f1f1d; --accent: #8fb0cf;
+            --ok: #3fb950; --warn: #d29922; --bad: #f85149; }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     margin: 0; background: var(--bg); color: var(--fg);
     font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
-    -webkit-user-select: none; user-select: none;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
   }
   main { max-width: 480px; margin: 0 auto; }
-  h1 { font-size: 20px; font-weight: 600; margin: 8px 0 16px; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 4px; }
+  h1 { font-size: 22px; font-weight: 650; margin: 8px 0 16px; }
+  label { display: block; font-size: 14px; color: var(--muted); margin: 14px 0 6px; }
   input[type=text], textarea {
-    width: 100%; font: inherit; font-size: 15px; color: var(--fg); background: var(--card);
+    width: 100%; font: inherit; font-size: 16px; color: var(--fg); background: var(--card); min-height: var(--tap);
     border: 1px solid var(--line); border-radius: 10px; padding: 10px; -webkit-user-select: text; user-select: text;
   }
-  textarea { min-height: 84px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
-  .check { display: flex; gap: 10px; align-items: center; margin-top: 14px; font-size: 15px; color: var(--fg); }
+  textarea { min-height: 84px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
   .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; word-break: break-all;
-          background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+          background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px;
           -webkit-user-select: all; user-select: all; }
   button {
-    font: inherit; border: 0; border-radius: 10px; padding: 12px 16px; cursor: pointer;
+    font: inherit; border: 0; border-radius: 10px; padding: 10px 16px; min-height: var(--tap); cursor: pointer;
     background: var(--accent); color: var(--bg);
   }
-  button.plain { background: transparent; color: var(--muted); padding: 8px 0; }
-  button.back { background: transparent; color: var(--accent); padding: 4px 0; margin-bottom: 4px; font-size: 16px; }
+  button:disabled { opacity: .5; cursor: default; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button.plain { background: transparent; color: var(--muted); padding: 10px 4px; }
+  button.link { background: transparent; color: var(--accent); padding: 10px 4px; }
+  button.danger { background: transparent; color: var(--bad); padding: 10px 4px; }
   .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 20px; }
-  .err { color: #b3261e; font-size: 14px; min-height: 1.4em; margin-top: 10px; }
+  .err { color: var(--bad); font-size: 14px; min-height: 1.4em; margin-top: 10px; }
+  .hint { font-size: 14px; color: var(--muted); }
+  .row3 { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row3 button { flex: 1; background: var(--card); color: var(--fg); border: 1px solid var(--line); }
+  .row3 button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 10px; }
+  .card h2 { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+  .card p { margin: 0 0 10px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* Home */
   #sync {
     display: block; width: 100%; margin-top: 30vh; padding: 28px; font-size: 18px;
     background: var(--card); color: var(--fg); border: 1px solid var(--line);
     transition: background 1.5s linear;
   }
   #sync.holding { background: var(--line); }
-  #status { text-align: center; color: var(--muted); font-size: 13px; min-height: 1.4em; margin-top: 14px; }
-  .hint { font-size: 13px; color: var(--muted); }
-  .timer { margin-top: 28px; }
-  .timer .label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
-  .row3 { display: flex; gap: 10px; }
-  .row3 button { flex: 1; background: var(--card); color: var(--fg); border: 1px solid var(--line); }
-  #timerText { font-size: 17px; margin-bottom: 10px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 14px; }
-  .card h2 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
-  .card p { margin: 0 0 10px; }
-  #angelQr, #protectQr { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 6px; }
-  #angelLink { margin-top: 10px; }
-  details { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 10px; }
-  summary { font-size: 15px; color: var(--muted); cursor: pointer; padding: 6px 0; }
-  .angel { border-top: 1px solid var(--line); padding: 10px 0; }
-  .angel:first-child { border-top: 0; }
-  .angelTop { display: flex; gap: 10px; align-items: center; }
-  .angelTop input { flex: 1; }
-  .angelBoxes { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
-  .angelBoxes label { display: flex; gap: 6px; align-items: center; margin: 0; font-size: 14px; color: var(--fg); }
-  .angel.removed input[type=text], .angel.removed .angelBoxes { opacity: .35; text-decoration: line-through; }
-  .alarmText { white-space: pre-wrap; -webkit-user-select: text; user-select: text; }
-  .tabs { display: flex; gap: 8px; margin: 8px 0 4px; }
+  #status { text-align: center; color: var(--muted); font-size: 14px; min-height: 1.4em; margin-top: 14px; }
+  .homeTimer { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; color: var(--muted); font-size: 15px; }
+  .homeTimer button { min-height: 36px; padding: 6px 14px; background: var(--card); color: var(--fg); border: 1px solid var(--line); }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--bad); margin-left: 6px; vertical-align: middle; }
+
+  /* Settings */
+  .bar { position: sticky; top: 0; z-index: 5; background: var(--bg); display: grid; grid-template-columns: 80px 1fr 80px; align-items: center;
+         margin: -8px -16px 0; padding: 8px 16px 6px; border-bottom: 1px solid transparent; }
+  .bar.scrolled { border-bottom-color: var(--line); }
+  .bar h1 { margin: 0; font-size: 20px; text-align: center; grid-column: 2; grid-row: 1; }
+  button.back { background: transparent; color: var(--accent); padding: 10px 8px 10px 0; font-size: 17px; text-align: left; grid-column: 1; grid-row: 1; }
+  .group { margin-top: 26px; }
+  .group > h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 0 4px; text-transform: uppercase; letter-spacing: .05em; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); min-height: 56px; }
+  .item:first-child { border-top: 0; padding-top: 0; }
+  .item .grow { flex: 1; min-width: 0; }
+  .item input[type=text] { min-height: 40px; padding: 8px 10px; }
+  .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .tag { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; white-space: nowrap; }
+  .angel { border-top: 1px solid var(--line); padding: 12px 0; }
+  .angel:first-child { border-top: 0; padding-top: 0; }
+  .angelTop { display: flex; gap: 8px; align-items: center; }
+  .angelTop input { flex: 1; min-width: 0; }
+  .switches { margin-top: 6px; }
+  .state { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--line); }
+  .state.ok { background: var(--ok); } .state.warn { background: var(--warn); } .state.bad { background: var(--bad); }
+
+  /* Switch: a real checkbox, drawn as a toggle */
+  .sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: var(--tap); margin: 0; color: var(--fg); font-size: 15px; }
+  .sw input { appearance: none; -webkit-appearance: none; flex: none; width: 50px; height: 30px; border-radius: 15px; background: var(--line);
+              position: relative; cursor: pointer; transition: background .15s; margin: 0; }
+  .sw input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff;
+                     box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: left .15s; }
+  .sw input:checked { background: var(--ok); }
+  .sw input:checked::after { left: 23px; }
+
+  .tabs { display: flex; gap: 8px; margin: 10px 0; }
   .tabs button { flex: 1; padding: 8px; background: var(--card); color: var(--muted); border: 1px solid var(--line); }
-  .tabs button.on { color: var(--fg); border-color: var(--accent); }
-  .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; }
-  h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 22px 0 0; text-transform: uppercase; letter-spacing: .04em; }
+  .tabs button.on { color: var(--fg); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .share { margin-top: 12px; }
+  .share canvas { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 8px; }
+  .share .mono { margin-top: 10px; }
+  .timerRun { font-size: 18px; margin-bottom: 10px; }
+  details { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 6px; }
+  summary { font-size: 15px; color: var(--muted); cursor: pointer; padding: 12px 4px; min-height: var(--tap); }
+  .alarmText { white-space: pre-wrap; -webkit-user-select: text; user-select: text; }
+  #angelQr, #protectQr { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 6px; }
+
+  /* Messages at the bottom ("Saved", "Removed … Undo") */
+  #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 10;
+           max-width: min(440px, calc(100% - 32px)); background: var(--fg); color: var(--bg); border-radius: 12px;
+           padding: 10px 14px; display: flex; gap: 14px; align-items: center; font-size: 15px; box-shadow: 0 4px 16px rgba(0,0,0,.25); }
+  #toast[hidden] { display: none; }
+  #toast button { background: transparent; color: var(--bg); font-weight: 600; padding: 6px 4px; min-height: 36px; text-decoration: underline; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
@@ -142,134 +185,159 @@
   </section>
 
   <section id="setup" hidden>
-    <button class="back" id="setupBack" type="button">‹ Back</button>
-    <h1>Settings</h1>
+    <div class="bar" id="setupBar">
+      <button class="back" id="setupBack" type="button" aria-label="Back to the start screen">‹ Back</button>
+      <h1>Settings</h1>
+    </div>
+
+    <!-- "I got a link": here on a new phone; under Invite once set up (moved by the app). -->
+    <div id="firstRun"></div>
     <div class="card" id="pasteCard">
-      <h2>Got an invite?</h2>
-      <p class="hint">To be someone's angel, or to be protected: copy the link you got, then tap Paste invite.</p>
-      <input id="pasteText" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Invite link">
+      <h2>I got a link</h2>
+      <p class="hint">To be someone's angel, to be protected, or to add a server: copy the link you got, then tap Paste.</p>
+      <input id="pasteText" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the link here" aria-label="Link">
       <div class="row3" style="margin-top:10px">
-        <button id="pastePaste" type="button">Paste invite</button>
-        <button id="pasteGo" type="button">Use it</button>
+        <button id="pastePaste" type="button">Paste</button>
+        <button id="pasteGo" type="button" class="primary">Open it</button>
       </div>
-      <div class="err" id="pasteError"></div>
+      <div class="err" id="pasteError" role="alert"></div>
     </div>
-    <div class="card" id="angelCard">
-      <h2>Become my angel</h2>
-      <div class="tabs">
-        <button id="angelUseApp" type="button">In this app</button>
-        <button id="angelUseTg" type="button">On Telegram</button>
+
+    <section class="group" id="gStatus" aria-labelledby="hStatus">
+      <h3 id="hStatus">Status</h3>
+      <div class="card">
+        <p id="serverSummary" class="hint">Checking your servers…</p>
+        <div id="watchList"></div>
+        <div class="row3" style="margin-top:10px"><button id="checkNow" type="button">Check now</button></div>
       </div>
-      <div id="angelReady" hidden>
-        <p class="hint" id="angelIntro">Let someone scan this, or send them the link. They tap Start in Telegram and get your alarms from then on; you see them below.</p>
-        <canvas id="angelQr" aria-label="QR code of your angel link"></canvas>
-        <div class="row3">
-          <button id="angelShare" type="button">Share link</button>
-          <button id="angelCopy" type="button">Copy link</button>
+    </section>
+
+    <section class="group" id="gTimer" aria-labelledby="hTimer">
+      <h3 id="hTimer">Timer</h3>
+      <div class="card">
+        <div id="timerStart">
+          <p class="hint">Walking home? Start a timer. Tap Done when you are safe; if you don't, your angels get an alarm with where you are.</p>
+          <div class="row3">
+            <button type="button" data-min="15">15 min</button>
+            <button type="button" data-min="30">30 min</button>
+            <button type="button" data-min="60">60 min</button>
+          </div>
         </div>
-        <p class="hint" id="angelHint"></p>
-        <div id="angelLink" class="mono"></div>
-      </div>
-      <p class="hint" id="angelNone">No link yet. It comes from your servers when they answer.</p>
-    </div>
-    <div class="card" id="beAngelCard" hidden>
-      <h2>You are an angel</h2>
-      <p class="hint" id="beAngelText"></p>
-      <div class="row3"><button id="beAngelOpen" type="button">Open</button></div>
-    </div>
-    <div class="card">
-      <h2>My angels</h2>
-      <div id="angelList"></div>
-      <p class="hint" id="angelsNone">No angels yet, or your servers have not sent the list.</p>
-      <p class="hint" style="margin:8px 0 0">Duress alarms go to every active angel. Changes are sent when you press Save.</p>
-    </div>
-    <div class="card" id="phonesCard" hidden>
-      <h2>My devices</h2>
-      <p class="hint">Devices that can send your alarms: this phone, other phones, your laptop. Not your servers or your angels. One you no longer use, or lost? Remove it, then tap Save.</p>
-      <div id="phoneList"></div>
-      <div class="row3"><button id="phoneGo" type="button">Add a phone or tablet</button></div>
-      <div id="phoneMsg" class="hint" style="margin-top:8px"></div>
-      <div id="phoneReady" hidden>
-        <canvas id="phoneQr" aria-label="QR code to add a phone"></canvas>
-        <div class="row3">
-          <button id="phoneShare" type="button">Share link</button>
-          <button id="phoneCopy" type="button">Copy link</button>
+        <div id="timerRun" hidden>
+          <div class="timerRun" id="timerText"></div>
+          <div class="row3">
+            <button type="button" id="timerDone" class="primary">Done, I'm safe</button>
+            <button type="button" id="timerMore">+15 min</button>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="card" id="protectCard">
-      <h2>Protect someone</h2>
-      <div id="joinedList"></div>
-      <p class="hint">A link for someone you want to protect: your servers watch over them too. They choose their own angels; you can be the first.</p>
-      <div class="row3"><button id="protectGo" type="button">Create a link</button></div>
-      <div id="protectList" class="hint" style="margin-top:8px"></div>
-      <div id="protectReady" hidden>
-        <canvas id="protectQr" aria-label="QR code of the invite"></canvas>
-        <div class="row3">
-          <button id="protectShare" type="button">Share link</button>
-          <button id="protectCopy" type="button">Copy link</button>
+    </section>
+
+    <section class="group" id="gAngels" aria-labelledby="hAngels">
+      <h3 id="hAngels">My angels</h3>
+      <div class="card">
+        <div id="angelList"></div>
+        <div id="angelsNone">
+          <p><b>No angels yet.</b></p>
+          <p class="hint">Angels get your alarms. Invite someone you trust.</p>
         </div>
-        <p class="hint">For one person, valid for 7 days.</p>
+        <p class="hint" id="angelsHint" style="margin-top:6px">Duress alarms go to every angel who is on. Changes are saved at once.</p>
+        <div class="row3" style="margin-top:10px"><button id="angelInvite" type="button">Invite an angel</button></div>
+        <div id="angelCard" hidden>
+          <div class="tabs" role="tablist">
+            <button id="angelUseApp" type="button" role="tab">In the app</button>
+            <button id="angelUseTg" type="button" role="tab">On Telegram</button>
+          </div>
+          <div id="angelReady" hidden>
+            <p class="hint" id="angelIntro"></p>
+            <div id="angelShareBox" class="share"></div>
+          </div>
+          <p class="hint" id="angelNone">No link yet: it comes from your servers when they answer. Tap Check now above.</p>
+        </div>
       </div>
-    </div>
-    <h3>Servers</h3>
-    <div id="watchList" class="hint"></div>
-    <h3>Options</h3>
-    <div class="check"><input id="useLocation" type="checkbox"><label for="useLocation" style="margin:0;color:inherit;font-size:15px">Include location</label></div>
-    <div class="check"><input id="autoSend" type="checkbox"><label for="autoSend" style="margin:0;color:inherit;font-size:15px">Send as soon as the app opens</label></div>
-    <p class="hint">With this on, opening the app is the signal. Opening it again within a minute sends nothing.</p>
+    </section>
+
+    <section class="group" id="gDevices" aria-labelledby="hDevices">
+      <h3 id="hDevices">My devices</h3>
+      <div class="card" id="phonesCard">
+        <p class="hint">Devices that can send your alarms: this phone, other phones, your laptop. Not your servers or your angels.</p>
+        <div id="phoneList"></div>
+        <div class="row3" style="margin-top:10px"><button id="phoneGo" type="button">Add a phone or tablet</button></div>
+        <div id="phoneMsg" class="hint" style="margin-top:8px" role="status"></div>
+        <div id="phoneShareBox" class="share" hidden></div>
+      </div>
+    </section>
+
+    <section class="group" id="gInvite" aria-labelledby="hInvite">
+      <h3 id="hInvite">Invite</h3>
+      <div class="card" id="protectCard">
+        <h2>Protect someone</h2>
+        <div id="joinedList"></div>
+        <p class="hint">A link for someone you want to protect: your servers watch over them too. They choose their own angels; you can be the first.</p>
+        <div class="row3"><button id="protectGo" type="button">Create a link</button></div>
+        <div id="protectList" class="hint" style="margin-top:8px" role="status"></div>
+        <div id="protectShareBox" class="share" hidden></div>
+      </div>
+      <div id="pasteSlot"></div>
+    </section>
+
+    <section class="group" id="gAngelFor" aria-labelledby="hAngelFor" hidden>
+      <h3 id="hAngelFor">I'm an angel for</h3>
+      <div class="card" id="beAngelCard">
+        <p id="beAngelText"></p>
+        <div class="row3"><button id="beAngelOpen" type="button">Open the angel screen</button></div>
+      </div>
+    </section>
+
+    <section class="group" id="gOptions" aria-labelledby="hOptions">
+      <h3 id="hOptions">Options</h3>
+      <div class="card">
+        <label class="sw" for="useLocation">Send my location with an alarm<input id="useLocation" type="checkbox"></label>
+        <label class="sw" for="autoSend">Send an alarm as soon as the app opens<input id="autoSend" type="checkbox"></label>
+        <p class="hint" style="margin-top:4px">With this on, opening the app is the signal. Opening it again within a minute sends nothing.</p>
+      </div>
+    </section>
+
     <details id="advanced">
-    <summary>Advanced</summary>
-    <label>This device's key (add it to your watchers)</label>
-    <div id="npub" class="mono"></div>
-    <label for="device">Device name shown to contacts</label>
-    <input id="device" type="text" autocomplete="off">
-    <label for="watchers">Watcher keys (npub), one per line</label>
-    <textarea id="watchers" spellcheck="false"></textarea>
-    <label for="relays">Relays, one per line</label>
-    <textarea id="relays" spellcheck="false"></textarea>
-    <label for="topic">Shortcut topic (keep it secret; the same as in your watchers' config)</label>
-    <input id="topic" type="text" class="mono" autocomplete="off" autocapitalize="off" spellcheck="false">
-    <div class="row3" style="margin-top:10px">
-      <button id="copyTopic" type="button">Copy topic</button>
-    </div>
-    <div class="row3" id="shortcutLinks" style="margin-top:10px" hidden>
-      <button id="addDuress" type="button">Add Duress shortcut</button>
-      <button id="addOk" type="button">Add OK shortcut</button>
-    </div>
-    <p class="hint" id="topicHint">Adding a shortcut asks for the topic: paste it, it is already copied.</p>
-    <div class="row"><button class="plain" id="newKey" type="button">New key</button></div>
+      <summary>Advanced</summary>
+      <label>This device's key (give it to a server to be watched)</label>
+      <div id="npub" class="mono"></div>
+      <label for="device">This device's name in alarms</label>
+      <input id="device" type="text" autocomplete="off">
+      <label for="watchers">Server keys (npub), one per line</label>
+      <textarea id="watchers" spellcheck="false" autocapitalize="off"></textarea>
+      <label for="relays">Relays, one per line</label>
+      <textarea id="relays" spellcheck="false" autocapitalize="off"></textarea>
+      <div class="row3" style="margin-top:10px"><button id="applyServers" type="button" class="primary">Apply servers and relays</button></div>
+      <div class="err" id="setupError" role="alert"></div>
+      <label for="topic">Shortcut topic (secret; the same as in your servers' config)</label>
+      <input id="topic" type="text" class="mono" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="row3" style="margin-top:10px">
+        <button id="copyTopic" type="button">Copy topic</button>
+      </div>
+      <div class="row3" id="shortcutLinks" style="margin-top:10px" hidden>
+        <button id="addDuress" type="button">Add Duress shortcut</button>
+        <button id="addOk" type="button">Add OK shortcut</button>
+      </div>
+      <p class="hint" id="topicHint">Adding a shortcut asks for the topic: paste it, it is already copied.</p>
+      <div class="row">
+        <span class="hint" id="version"></span>
+        <button class="danger" id="newKey" type="button">Replace this device's key…</button>
+      </div>
     </details>
-    <div class="err" id="setupError"></div>
-    <div class="row">
-      <span class="hint" id="version"></span>
-      <button id="save" type="button">Save</button>
-    </div>
   </section>
 
   <section id="main" hidden>
     <button id="sync" type="button">Hold to sync</button>
-    <div id="status"></div>
-    <div id="watchState" class="hint" style="text-align:center"></div>
-    <div id="notice" class="hint" style="text-align:center"></div>
-    <div class="timer">
-      <div class="label">Timer</div>
-      <div id="timerStart" class="row3">
-        <button type="button" data-min="15">15 min</button>
-        <button type="button" data-min="30">30 min</button>
-        <button type="button" data-min="60">60 min</button>
-      </div>
-      <div id="timerRun" hidden>
-        <div id="timerText"></div>
-        <div class="row3">
-          <button type="button" id="timerDone">Done</button>
-          <button type="button" id="timerMore">+15 min</button>
-        </div>
-      </div>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div class="homeTimer" id="homeTimer" hidden>
+      <span id="homeTimerText"></span>
+      <button type="button" id="homeTimerDone">Done</button>
     </div>
-    <div class="row"><span></span><button class="plain" id="openSetup" type="button">Settings</button></div>
+    <div class="row"><span></span><button class="plain" id="openSetup" type="button">Settings<span class="dot" id="notice" hidden aria-label="(something new)"></span></button></div>
   </section>
 </main>
+<div id="toast" role="status" aria-live="polite" hidden><span id="toastText"></span><button id="toastUndo" type="button" hidden>Undo</button></div>
 <script src="app.js"></script>
 </body>
 </html>
