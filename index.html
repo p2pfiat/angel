@@ -2,343 +2,1299 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Sync">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<link rel="manifest" href="manifest.webmanifest">
-<title>Sync</title>
+<title>Angel — Decentralized Personal Safety</title>
+<script>
+(function () {
+  var h = location.hash || '';
+  var isAppHash = /^#(?:[jadw]=|angel$|.*join=1)/.test(h);
+  var standalone = !!navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  var forceHome = /[?&]home(?:=|&|$)/.test(location.search || '');
+  var configured = false;
+  if (!forceHome && !isAppHash && !standalone) {
+    try {
+      var s = JSON.parse(localStorage.getItem('w.state'));
+      if (s && s.watchers && s.watchers.length) configured = true;
+      var a = JSON.parse(localStorage.getItem('w.angel'));
+      if (a && a.vips && Object.keys(a.vips).length) configured = true;
+    } catch (e) {}
+  }
+  if (isAppHash || standalone || configured) {
+    location.replace('./app.html' + h);
+  }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f6f4; --fg: #1d1d1b; --muted: #5f5f58; --line: #d6d6cf; --card: #ffffff; --accent: #3b5b7a;
-    --ok: #2e8540; --warn: #b7791f; --bad: #c0392b; --tap: 44px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #161615; --fg: #ececea; --muted: #a3a39b; --line: #33332f; --card: #1f1f1d; --accent: #8fb0cf;
-            --ok: #3fb950; --warn: #d29922; --bad: #f85149; }
+    --blue: #1A73E8;
+    --blue-bright: #4285F4;
+    --blue-soft: #E8F0FE;
+    --red: #EA4335;
+    --red-ink: #C5221F;
+    --red-soft: #FCE8E6;
+    --yellow: #FBBC04;
+    --yellow-deep: #F9AB00;
+    --yellow-ink: #9A5B00;
+    --yellow-soft: #FEF7E0;
+    --green: #34A853;
+    --green-ink: #137333;
+    --green-soft: #E6F4EA;
+    --bg: #FFFFFF;
+    --surface: #F8F9FA;
+    --border: #DADCE0;
+    --ink: #202124;
+    --muted: #5F6368;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --shadow-sm: 0 1px 2px rgba(60, 64, 67, 0.12), 0 1px 3px 1px rgba(60, 64, 67, 0.06);
+    --shadow-md: 0 4px 16px rgba(60, 64, 67, 0.10), 0 1px 4px rgba(60, 64, 67, 0.06);
   }
   * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
   body {
-    margin: 0; background: var(--bg); color: var(--fg);
-    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
-    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
-  main { max-width: 480px; margin: 0 auto; }
-  h1 { font-size: 22px; font-weight: 650; margin: 8px 0 16px; }
-  label { display: block; font-size: 14px; color: var(--muted); margin: 14px 0 6px; }
-  input[type=text], textarea {
-    width: 100%; font: inherit; font-size: 16px; color: var(--fg); background: var(--card); min-height: var(--tap);
-    border: 1px solid var(--line); border-radius: 10px; padding: 10px; -webkit-user-select: text; user-select: text;
+  h1, h2, h3, h4, .brand {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: -0.02em;
+    margin: 0;
   }
-  textarea { min-height: 84px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
-  .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; word-break: break-all;
-          background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px;
-          -webkit-user-select: all; user-select: all; }
-  button {
-    font: inherit; border: 0; border-radius: 10px; padding: 10px 16px; min-height: var(--tap); cursor: pointer;
-    background: var(--accent); color: var(--bg);
+  a { color: inherit; }
+  code, pre {
+    font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
-  button:disabled { opacity: .5; cursor: default; }
-  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  button.plain { background: transparent; color: var(--muted); padding: 10px 4px; }
-  button.link { background: transparent; color: var(--accent); padding: 10px 4px; }
-  button.danger { background: transparent; color: var(--bad); padding: 10px 4px; }
-  .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 20px; }
-  .err { color: var(--bad); font-size: 14px; min-height: 1.4em; margin-top: 10px; }
-  .hint { font-size: 14px; color: var(--muted); }
-  .row3 { display: flex; gap: 10px; flex-wrap: wrap; }
-  .row3 button { flex: 1; background: var(--card); color: var(--fg); border: 1px solid var(--line); }
-  .row3 button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 10px; }
-  .card h2 { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
-  .card p { margin: 0 0 10px; }
-  .card p:last-child { margin-bottom: 0; }
-
-  /* Home */
-  #sync {
-    display: block; width: 100%; margin-top: 30vh; padding: 28px; font-size: 18px;
-    background: var(--card); color: var(--fg); border: 1px solid var(--line);
-    transition: background 1.5s linear;
+  .wrap {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 24px;
   }
-  #sync.holding { background: var(--line); }
-  #status { text-align: center; color: var(--muted); font-size: 14px; min-height: 1.4em; margin-top: 14px; }
-  .homeTimer { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; color: var(--muted); font-size: 15px; }
-  .homeTimer button { min-height: 36px; padding: 6px 14px; background: var(--card); color: var(--fg); border: 1px solid var(--line); }
-  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--bad); margin-left: 6px; vertical-align: middle; }
 
-  /* Settings */
-  .bar { position: sticky; top: 0; z-index: 5; background: var(--bg); display: grid; grid-template-columns: 80px 1fr 80px; align-items: center;
-         margin: -8px -16px 0; padding: 8px 16px 6px; border-bottom: 1px solid transparent; }
-  .bar.scrolled { border-bottom-color: var(--line); }
-  .bar h1 { margin: 0; font-size: 20px; text-align: center; grid-column: 2; grid-row: 1; }
-  button.back { background: transparent; color: var(--accent); padding: 10px 8px 10px 0; font-size: 17px; text-align: left; grid-column: 1; grid-row: 1; }
-  .group { margin-top: 26px; }
-  .group > h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 0 4px; text-transform: uppercase; letter-spacing: .05em; }
-  .item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); min-height: 56px; }
-  .item:first-child { border-top: 0; padding-top: 0; }
-  .item .grow { flex: 1; min-width: 0; }
-  .item input[type=text] { min-height: 40px; padding: 8px 10px; }
-  .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-  .tag { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; white-space: nowrap; }
-  .angel { border-top: 1px solid var(--line); padding: 12px 0; }
-  .angel:first-child { border-top: 0; padding-top: 0; }
-  .angelTop { display: flex; gap: 8px; align-items: center; }
-  .angelTop input { flex: 1; min-width: 0; }
-  .switches { margin-top: 6px; }
-  .state { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--line); }
-  .state.ok { background: var(--ok); } .state.warn { background: var(--warn); } .state.bad { background: var(--bad); }
+  /* Sticky glass navbar */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(218, 220, 224, 0.7);
+  }
+  .navInner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    height: 68px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 21px;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .navLinks {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .navLinks a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .navLinks a:hover { color: var(--blue); }
 
-  /* Switch: a real checkbox, drawn as a toggle */
-  .sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: var(--tap); margin: 0; color: var(--fg); font-size: 15px; }
-  .sw input { appearance: none; -webkit-appearance: none; flex: none; width: 50px; height: 30px; border-radius: 15px; background: var(--line);
-              position: relative; cursor: pointer; transition: background .15s; margin: 0; }
-  .sw input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff;
-                     box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: left .15s; }
-  .sw input:checked { background: var(--ok); }
-  .sw input:checked::after { left: 23px; }
+  /* Pill buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 12px 22px;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btnPrimary {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(26, 115, 232, 0.28);
+  }
+  .btnPrimary:hover {
+    background: #1765cc;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.30);
+  }
+  .btnOutline {
+    background: #fff;
+    color: var(--blue);
+    border-color: var(--border);
+  }
+  .btnOutline:hover {
+    background: var(--blue-soft);
+    border-color: #d2e3fc;
+  }
+  .btnSm {
+    padding: 9px 16px;
+    font-size: 13px;
+  }
+  .btnGreen {
+    background: var(--green-soft);
+    color: var(--green-ink);
+    border-color: #ceead6;
+  }
+  .btnGreen:hover, .btnGreen.active {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+  .btnRed {
+    background: var(--red-soft);
+    color: var(--red-ink);
+    border-color: #fad2cf;
+  }
+  .btnRed:hover, .btnRed.active {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+  }
 
-  .tabs { display: flex; gap: 8px; margin: 10px 0; }
-  .tabs button { flex: 1; padding: 8px; background: var(--card); color: var(--muted); border: 1px solid var(--line); }
-  .tabs button.on { color: var(--fg); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-  .share { margin-top: 12px; }
-  .share canvas { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 8px; }
-  .share .mono { margin-top: 10px; }
-  .timerRun { font-size: 18px; margin-bottom: 10px; }
-  details { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 6px; }
-  summary { font-size: 15px; color: var(--muted); cursor: pointer; padding: 12px 4px; min-height: var(--tap); }
-  .alarmText { white-space: pre-wrap; -webkit-user-select: text; user-select: text; }
-  #angelQr, #protectQr { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 6px; }
+  /* Hero */
+  .hero {
+    padding: 56px 0 72px;
+    background:
+      radial-gradient(640px 360px at 84% 12%, rgba(66, 133, 244, 0.08), transparent 70%),
+      radial-gradient(500px 320px at 14% 80%, rgba(52, 168, 83, 0.06), transparent 70%),
+      var(--bg);
+  }
+  .heroGrid {
+    display: grid;
+    grid-template-columns: 1.02fr 1fr;
+    gap: 44px;
+    align-items: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .badgeDots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .badgeDots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 4.4vw, 52px);
+    line-height: 1.12;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+  .heroLead {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 500px;
+    margin: 0 0 28px;
+  }
+  .heroActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .heroMeta {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .heroMeta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-  /* Messages at the bottom ("Saved", "Removed … Undo") */
-  #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 10;
-           max-width: min(440px, calc(100% - 32px)); background: var(--fg); color: var(--bg); border-radius: 12px;
-           padding: 10px 14px; display: flex; gap: 14px; align-items: center; font-size: 15px; box-shadow: 0 4px 16px rgba(0,0,0,.25); }
-  #toast[hidden] { display: none; }
-  #toast button { background: transparent; color: var(--bg); font-weight: 600; padding: 6px 4px; min-height: 36px; text-decoration: underline; }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  /* Interactive 3D canvas card */
+  .stageCard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: var(--shadow-md);
+  }
+  .stageHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 6px 12px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .stageStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .statusDot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--blue-bright);
+    transition: background-color 0.2s;
+  }
+  .canvasBox {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    height: 330px;
+    cursor: grab;
+    touch-action: pan-y;
+  }
+  .canvasBox:active { cursor: grabbing; }
+  .canvasBox canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .dragHint {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.85);
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    pointer-events: none;
+  }
+  .stageControls {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .simButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .legend i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Sections */
+  section.band {
+    padding: 76px 0;
+  }
+  section.alt {
+    background: var(--surface);
+    border-top: 1px solid #eceff1;
+    border-bottom: 1px solid #eceff1;
+  }
+  .secHead {
+    max-width: 640px;
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .secHead h2 {
+    font-size: clamp(26px, 3.2vw, 36px);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .secHead p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 17px;
+  }
+
+  /* Use cases 2x2 */
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .useIllo {
+    border-radius: var(--radius-md);
+    padding: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 148px;
+  }
+  .useIllo svg {
+    width: 100%;
+    height: 100%;
+    max-width: 280px;
+  }
+  .bg-yellow { background: var(--yellow-soft); }
+  .bg-red { background: var(--red-soft); }
+  .bg-blue { background: var(--blue-soft); }
+  .bg-green { background: var(--green-soft); }
+  .useTag {
+    display: inline-block;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .tag-yellow { background: var(--yellow-soft); color: var(--yellow-ink); }
+  .tag-red { background: var(--red-soft); color: var(--red-ink); }
+  .tag-blue { background: var(--blue-soft); color: var(--blue); }
+  .tag-green { background: var(--green-soft); color: var(--green-ink); }
+  .card h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  /* How it works */
+  .flowDiagram {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+  }
+  .flowDiagram svg {
+    display: block;
+    width: 100%;
+    min-width: 640px;
+    height: auto;
+  }
+  .grid4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .stepCard {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stepNum {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .stepCard h3 {
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  .stepCard p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* Download & Install */
+  .grid3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    align-items: stretch;
+  }
+  .dlCard {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  .dlIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .dlCard h3 {
+    font-size: 21px;
+    margin-bottom: 6px;
+  }
+  .dlSub {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .dlBody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .dlBody p {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--muted);
+  }
+  .miniSteps {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+  }
+  .miniSteps strong {
+    display: block;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .miniSteps div + div {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e8eaed;
+  }
+  .codeWrap {
+    position: relative;
+    background: #202124;
+    color: #e8eaed;
+    border-radius: 14px;
+    padding: 14px 14px 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+  .codeWrap pre {
+    margin: 0;
+    white-space: pre;
+    padding-right: 60px;
+  }
+  .copyBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .copyBtn:hover { background: rgba(255, 255, 255, 0.24); }
+  .dlFoot {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Privacy */
+  .privCard {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .privIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .privCard h3 {
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  .privCard p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* Footer */
+  footer {
+    padding: 40px 0 48px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .footInner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .footLinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-weight: 500;
+  }
+  .footLinks a {
+    text-decoration: none;
+    color: var(--blue);
+  }
+  .footLinks a:hover { text-decoration: underline; }
+  .footNote {
+    max-width: 540px;
+    margin: 8px 0 0;
+    font-size: 13px;
+  }
+
+  @media (max-width: 960px) {
+    .heroGrid, .grid3 { grid-template-columns: 1fr; }
+    .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 680px) {
+    .navLinks { display: none; }
+    .grid2, .grid4 { grid-template-columns: 1fr; }
+    .hero { padding: 36px 0 52px; }
+    section.band { padding: 56px 0; }
+    .canvasBox { height: 280px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .btn, .card { transition: none; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <section id="angelJoin" hidden>
-    <h1>Be an angel</h1>
-    <p id="ajText"></p>
-    <div id="ajForm" hidden>
-      <label for="ajName">Your name, as they will see it</label>
-      <input id="ajName" type="text" autocomplete="name">
-      <p class="hint">Next, allow notifications: that is how alarms reach you.</p>
-      <div class="row"><span></span><button id="ajGo" type="button">Join and allow notifications</button></div>
-    </div>
-    <div id="ajInstall" hidden>
-      <p class="hint">On an iPhone, alarms arrive only in Sync on the Home Screen:</p>
-      <ol class="hint">
-        <li>Tap Share, then <b>Add to Home Screen</b>.</li>
-        <li>Open <b>Sync</b> from the Home Screen.</li>
-      </ol>
-      <p class="hint">Already have Sync on the Home Screen? Copy this invite, open Sync, go to Settings and tap <b>Paste</b>.</p>
-      <div class="row3"><button id="ajCopy" type="button">Copy invite</button></div>
-    </div>
-    <div id="ajList" class="hint" style="margin-top:12px"></div>
-    <div class="err" id="ajError"></div>
-  </section>
 
-  <section id="angel" hidden>
-    <h1>Angel</h1>
-    <p id="angelFor"></p>
-    <p class="hint" id="angelNotifyState"></p>
-    <div class="row3"><button id="angelNotify" type="button" hidden>Turn on notifications</button></div>
-    <p class="hint" id="angelNote"></p>
-    <div class="card" id="angelProtect" hidden>
-      <h2>Want protection yourself?</h2>
-      <p class="hint" id="angelProtectText"></p>
-      <div class="row3"><button id="angelProtectGo" type="button">Protect me too</button></div>
-    </div>
-    <div id="angelAlarms"></div>
-    <div class="row"><button class="plain" id="angelRefresh" type="button">Refresh</button><button class="plain" id="angelSettings" type="button">Settings</button></div>
-  </section>
+<header class="nav">
+  <div class="wrap navInner">
+    <a class="brand" href="#top" aria-label="Angel home">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <ellipse cx="16" cy="8.5" rx="9" ry="3.2" stroke="#FBBC04" stroke-width="2.5"/>
+        <circle cx="16" cy="19" r="8.5" stroke="#DADCE0" stroke-width="1.5" fill="#F8F9FA"/>
+        <circle cx="12.5" cy="17.5" r="2.6" fill="#4285F4"/>
+        <circle cx="19.5" cy="17.5" r="2.6" fill="#34A853"/>
+        <circle cx="16" cy="22.5" r="2.6" fill="#EA4335"/>
+      </svg>
+      <span>Angel</span>
+    </a>
+    <nav class="navLinks" aria-label="Primary">
+      <a href="#use-cases">Use cases</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#download">Download</a>
+      <a href="#privacy">Privacy</a>
+    </nav>
+    <a class="btn btnPrimary btnSm" href="./app.html">Open Web App</a>
+  </div>
+</header>
 
-  <section id="join" hidden>
-    <h1 id="joinTitle">You are invited</h1>
-    <p id="joinText"></p>
-    <div id="joinHere">
-      <label for="joinName" id="joinLabel">Your name, as your angels will see it</label>
-      <input id="joinName" type="text" autocomplete="name">
-      <div class="row">
-        <button class="plain" id="joinLater" type="button">Not now</button>
-        <button id="joinGo" type="button">Join</button>
-      </div>
-    </div>
-    <div id="joinInstall" hidden>
-      <p class="hint">On an iPhone, add Sync to your Home Screen first:</p>
-      <ol class="hint">
-        <li>Tap Share, then <b>Add to Home Screen</b>.</li>
-        <li>Open <b>Sync</b> from the Home Screen.</li>
-      </ol>
-      <p class="hint">Already have Sync on the Home Screen? Copy this invite, open Sync and tap <b>Paste</b>.</p>
-      <div class="row3"><button id="joinCopy" type="button">Copy invite</button></div>
-    </div>
-    <div id="joinList" class="hint" style="margin-top:12px"></div>
-    <div class="err" id="joinError"></div>
-  </section>
-
-  <section id="setup" hidden>
-    <div class="bar" id="setupBar">
-      <button class="back" id="setupBack" type="button" aria-label="Back to the start screen">‹ Back</button>
-      <h1>Settings</h1>
-    </div>
-
-    <!-- "I got a link": here on a new phone; under Invite once set up (moved by the app). -->
-    <div id="firstRun"></div>
-    <div class="card" id="pasteCard">
-      <h2>I got a link</h2>
-      <p class="hint">To be someone's angel, to be protected, or to add a server: copy the link you got, then tap Paste.</p>
-      <input id="pasteText" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the link here" aria-label="Link">
-      <div class="row3" style="margin-top:10px">
-        <button id="pastePaste" type="button">Paste</button>
-        <button id="pasteGo" type="button" class="primary">Open it</button>
-      </div>
-      <div class="err" id="pasteError" role="alert"></div>
-    </div>
-
-    <section class="group" id="gStatus" aria-labelledby="hStatus">
-      <h3 id="hStatus">Status</h3>
-      <div class="card">
-        <p id="serverSummary" class="hint">Checking your servers…</p>
-        <div id="watchList"></div>
-        <div class="row3" style="margin-top:10px"><button id="checkNow" type="button">Check now</button></div>
-      </div>
-    </section>
-
-    <section class="group" id="gTimer" aria-labelledby="hTimer">
-      <h3 id="hTimer">Timer</h3>
-      <div class="card">
-        <div id="timerStart">
-          <p class="hint">Walking home? Start a timer. Tap Done when you are safe; if you don't, your angels get an alarm with where you are.</p>
-          <div class="row3">
-            <button type="button" data-min="15">15 min</button>
-            <button type="button" data-min="30">30 min</button>
-            <button type="button" data-min="60">60 min</button>
-          </div>
+<main id="top">
+  <section class="hero">
+    <div class="wrap heroGrid">
+      <div>
+        <div class="badge">
+          <span class="badgeDots" aria-hidden="true">
+            <span style="background:#4285F4"></span>
+            <span style="background:#EA4335"></span>
+            <span style="background:#FBBC04"></span>
+            <span style="background:#34A853"></span>
+          </span>
+          Decentralized Personal Safety
         </div>
-        <div id="timerRun" hidden>
-          <div class="timerRun" id="timerText"></div>
-          <div class="row3">
-            <button type="button" id="timerDone" class="primary">Done, I'm safe</button>
-            <button type="button" id="timerMore">+15 min</button>
+        <h1>Silent help from people you trust — in minutes.</h1>
+        <p class="heroLead">
+          No central server, no constant tracking. If you're in danger and can't call for help, independent watchers alert your trusted angels automatically.
+        </p>
+        <div class="heroActions">
+          <a class="btn btnPrimary" href="#download-webapp">Install Web App</a>
+          <a class="btn btnOutline" href="#download">Download Desktop &amp; Docker</a>
+        </div>
+        <div class="heroMeta">
+          <span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34A853" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Works on iPhone, Android &amp; Windows
+          </span>
+          <span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Encrypted end-to-end
+          </span>
+          <span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F9AB00" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            No open ports required
+          </span>
+        </div>
+      </div>
+
+      <div class="stageCard" aria-label="Interactive conceptual 3D network visualization">
+        <div class="stageHead">
+          <span class="stageStatus">
+            <span class="statusDot" id="simDot"></span>
+            <span id="simStatus">Watchers active — holding no alarm</span>
+          </span>
+          <span>3D Concept View</span>
+        </div>
+        <div class="canvasBox" id="canvasBox">
+          <canvas id="netCanvas" aria-label="3D visualization of your device, Nostr relays, independent watchers, and angels"></canvas>
+          <span class="dragHint">Drag to tilt</span>
+        </div>
+        <div class="stageControls">
+          <div class="simButtons">
+            <button type="button" class="btn btnSm btnGreen" id="simOk">Safe Check-in</button>
+            <button type="button" class="btn btnSm btnRed" id="simAlarm">Trigger Silent Alarm</button>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span><i style="background:#202124"></i>Device</span>
+            <span><i style="background:#4285F4"></i>Relays</span>
+            <span><i style="background:#FBBC04"></i>Watchers</span>
+            <span><i style="background:#34A853"></i>Angels</span>
           </div>
         </div>
       </div>
-    </section>
-
-    <section class="group" id="gAngels" aria-labelledby="hAngels">
-      <h3 id="hAngels">My angels</h3>
-      <div class="card">
-        <div id="angelList"></div>
-        <div id="angelsNone">
-          <p><b>No angels yet.</b></p>
-          <p class="hint">Angels get your alarms. Invite someone you trust.</p>
-        </div>
-        <p class="hint" id="angelsHint" style="margin-top:6px">Duress alarms go to every angel who is on. Changes are saved at once.</p>
-        <div class="row3" style="margin-top:10px"><button id="angelInvite" type="button">Invite an angel</button></div>
-        <div id="angelCard" hidden>
-          <div class="tabs" role="tablist">
-            <button id="angelUseApp" type="button" role="tab">In the app</button>
-            <button id="angelUseTg" type="button" role="tab">On Telegram</button>
-          </div>
-          <div id="angelReady" hidden>
-            <p class="hint" id="angelIntro"></p>
-            <div id="angelShareBox" class="share"></div>
-          </div>
-          <p class="hint" id="angelNone">No link yet: it comes from your servers when they answer. Tap Check now above.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="group" id="gDevices" aria-labelledby="hDevices">
-      <h3 id="hDevices">My devices</h3>
-      <div class="card" id="phonesCard">
-        <p class="hint">Devices that can send your alarms: this phone, other phones, your laptop. Not your servers or your angels.</p>
-        <div id="phoneList"></div>
-        <div class="row3" style="margin-top:10px"><button id="phoneGo" type="button">Add a phone or tablet</button></div>
-        <div id="phoneMsg" class="hint" style="margin-top:8px" role="status"></div>
-        <div id="phoneShareBox" class="share" hidden></div>
-      </div>
-    </section>
-
-    <section class="group" id="gInvite" aria-labelledby="hInvite">
-      <h3 id="hInvite">Invite</h3>
-      <div class="card" id="protectCard">
-        <h2>Protect someone</h2>
-        <div id="joinedList"></div>
-        <p class="hint">A link for someone you want to protect: your servers watch over them too. They choose their own angels; you can be the first.</p>
-        <div class="row3"><button id="protectGo" type="button">Create a link</button></div>
-        <div id="protectList" class="hint" style="margin-top:8px" role="status"></div>
-        <div id="protectShareBox" class="share" hidden></div>
-      </div>
-      <div id="pasteSlot"></div>
-    </section>
-
-    <section class="group" id="gAngelFor" aria-labelledby="hAngelFor" hidden>
-      <h3 id="hAngelFor">I'm an angel for</h3>
-      <div class="card" id="beAngelCard">
-        <p id="beAngelText"></p>
-        <div class="row3"><button id="beAngelOpen" type="button">Open the angel screen</button></div>
-      </div>
-    </section>
-
-    <section class="group" id="gOptions" aria-labelledby="hOptions">
-      <h3 id="hOptions">Options</h3>
-      <div class="card">
-        <label class="sw" for="useLocation">Send my location with an alarm<input id="useLocation" type="checkbox"></label>
-        <label class="sw" for="autoSend">Send an alarm as soon as the app opens<input id="autoSend" type="checkbox"></label>
-        <p class="hint" style="margin-top:4px">With this on, opening the app is the signal. Opening it again within a minute sends nothing.</p>
-      </div>
-    </section>
-
-    <details id="advanced">
-      <summary>Advanced</summary>
-      <label>This device's key (give it to a server to be watched)</label>
-      <div id="npub" class="mono"></div>
-      <label for="device">This device's name in alarms</label>
-      <input id="device" type="text" autocomplete="off">
-      <label for="watchers">Server keys (npub), one per line</label>
-      <textarea id="watchers" spellcheck="false" autocapitalize="off"></textarea>
-      <label for="relays">Relays, one per line</label>
-      <textarea id="relays" spellcheck="false" autocapitalize="off"></textarea>
-      <div class="row3" style="margin-top:10px"><button id="applyServers" type="button" class="primary">Apply servers and relays</button></div>
-      <div class="err" id="setupError" role="alert"></div>
-      <label for="topic">Shortcut topic (secret; the same as in your servers' config)</label>
-      <input id="topic" type="text" class="mono" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <div class="row3" style="margin-top:10px">
-        <button id="copyTopic" type="button">Copy topic</button>
-      </div>
-      <div class="row3" id="shortcutLinks" style="margin-top:10px" hidden>
-        <button id="addDuress" type="button">Add Duress shortcut</button>
-        <button id="addOk" type="button">Add OK shortcut</button>
-      </div>
-      <p class="hint" id="topicHint">Adding a shortcut asks for the topic: paste it, it is already copied.</p>
-      <div class="row">
-        <span class="hint" id="version"></span>
-        <button class="danger" id="newKey" type="button">Replace this device's key…</button>
-      </div>
-    </details>
+    </div>
   </section>
 
-  <section id="main" hidden>
-    <button id="sync" type="button">Hold to sync</button>
-    <div id="status" role="status" aria-live="polite"></div>
-    <div class="homeTimer" id="homeTimer" hidden>
-      <span id="homeTimerText"></span>
-      <button type="button" id="homeTimerDone">Done</button>
+  <section id="use-cases" class="band alt">
+    <div class="wrap">
+      <div class="secHead">
+        <div class="eyebrow">Use Cases</div>
+        <h2>Simple protection for real-life moments</h2>
+        <p>Every situation uses the same quiet building blocks — choose only what fits your day.</p>
+      </div>
+
+      <div class="grid2">
+        <article class="card">
+          <div class="useIllo bg-yellow" aria-hidden="true">
+            <svg viewBox="0 0 280 120" fill="none">
+              <path d="M24 92 C78 92, 92 42, 146 42 C194 42, 206 78, 256 78" stroke="#F9AB00" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 6"/>
+              <circle cx="38" cy="92" r="10" fill="#FBBC04"/>
+              <circle cx="146" cy="42" r="24" fill="#FFFFFF" stroke="#F9AB00" stroke-width="3"/>
+              <path d="M146 30 V42 L154 47" stroke="#9A5B00" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="220" y="54" width="38" height="36" rx="8" fill="#FFFFFF" stroke="#34A853" stroke-width="3"/>
+              <path d="M232 72 L237 77 L247 67" stroke="#34A853" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="useTag tag-yellow">Walk-home timer</span>
+          <h3>Walking Home Safe</h3>
+          <p>Start a 15, 30, or 60-minute walk-home timer in one tap. Tap <strong>Done</strong> when you're safe — if you don't, your angels get an alarm with your location, even if your phone is taken or turned off.</p>
+        </article>
+
+        <article class="card">
+          <div class="useIllo bg-red" aria-hidden="true">
+            <svg viewBox="0 0 280 120" fill="none">
+              <rect x="112" y="18" width="56" height="84" rx="12" fill="#FFFFFF" stroke="#EA4335" stroke-width="3"/>
+              <rect x="128" y="25" width="24" height="4" rx="2" fill="#FAD2CF"/>
+              <circle cx="80" cy="60" r="10" stroke="#EA4335" stroke-width="2.5" stroke-opacity="0.45"/>
+              <circle cx="80" cy="60" r="20" stroke="#EA4335" stroke-width="2" stroke-opacity="0.25"/>
+              <circle cx="80" cy="60" r="4" fill="#EA4335"/>
+              <path d="M188 46 C198 54, 198 66, 188 74" stroke="#EA4335" stroke-width="3" stroke-linecap="round"/>
+              <path d="M201 38 C215 50, 215 70, 201 82" stroke="#EA4335" stroke-width="3" stroke-linecap="round" stroke-opacity="0.65"/>
+              <path d="M214 30 C232 46, 232 74, 214 90" stroke="#EA4335" stroke-width="3" stroke-linecap="round" stroke-opacity="0.35"/>
+              <circle cx="140" cy="62" r="10" fill="#FCE8E6" stroke="#EA4335" stroke-width="2.5"/>
+            </svg>
+          </div>
+          <span class="useTag tag-red">Immediate duress</span>
+          <h3>Hidden Emergency Gesture</h3>
+          <p>In immediate danger on the street or at a party? A discreet triple-tap on the back of your iPhone (Back Tap), Action Button, or holding the quiet <strong>Sync</strong> button alerts every angel immediately.</p>
+        </article>
+
+        <article class="card">
+          <div class="useIllo bg-blue" aria-hidden="true">
+            <svg viewBox="0 0 280 120" fill="none">
+              <rect x="52" y="22" width="54" height="76" rx="10" fill="#FFFFFF" stroke="#1A73E8" stroke-width="3"/>
+              <rect x="65" y="42" width="28" height="22" rx="4" fill="#E8F0FE" stroke="#1A73E8" stroke-width="2"/>
+              <path d="M72 42 V37 A7 7 0 0 1 86 37 V42" stroke="#1A73E8" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M118 60 H156" stroke="#1A73E8" stroke-width="3" stroke-dasharray="5 5" stroke-linecap="round"/>
+              <circle cx="196" cy="60" r="28" fill="#FFFFFF" stroke="#1A73E8" stroke-width="3"/>
+              <path d="M196 44 V60 L207 67" stroke="#1A73E8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="222" cy="36" r="10" fill="#34A853"/>
+              <path d="M218 36 L221 39 L227 33" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="useTag tag-blue">Forced access</span>
+          <h3>Forced Phone Unlock</h3>
+          <p>Forced to unlock your phone or open a banking app? An iOS automation silently starts a short countdown. Only a subtle double-tap cancels it — otherwise your angels are alerted automatically.</p>
+        </article>
+
+        <article class="card">
+          <div class="useIllo bg-green" aria-hidden="true">
+            <svg viewBox="0 0 280 120" fill="none">
+              <rect x="44" y="24" width="96" height="62" rx="8" fill="#FFFFFF" stroke="#34A853" stroke-width="3"/>
+              <path d="M32 92 H152" stroke="#34A853" stroke-width="4" stroke-linecap="round"/>
+              <rect x="70" y="43" width="44" height="24" rx="5" fill="#E6F4EA" stroke="#34A853" stroke-width="2"/>
+              <text x="92" y="59" text-anchor="middle" fill="#137333" font-size="11" font-family="Roboto Mono, monospace" font-weight="600">KEYS</text>
+              <path d="M156 56 C176 56, 184 56, 200 56" stroke="#34A853" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="222" cy="40" r="14" fill="#FFFFFF" stroke="#4285F4" stroke-width="3"/>
+              <circle cx="222" cy="76" r="14" fill="#FFFFFF" stroke="#FBBC04" stroke-width="3"/>
+              <circle cx="222" cy="40" r="5" fill="#4285F4"/>
+              <circle cx="222" cy="76" r="5" fill="#FBBC04"/>
+            </svg>
+          </div>
+          <span class="useTag tag-green">Desktop check-in</span>
+          <h3>Coerced Laptop Sign-In</h3>
+          <p>Every time your Windows PC unlocks, a silent background agent starts a short timer. Press your secret hotkey to check in; if someone forces access, watchers in other homes raise the alarm.</p>
+        </article>
+      </div>
     </div>
-    <div class="row"><span></span><button class="plain" id="openSetup" type="button">Settings<span class="dot" id="notice" hidden aria-label="(something new)"></span></button></div>
+  </section>
+
+  <section id="how-it-works" class="band">
+    <div class="wrap">
+      <div class="secHead">
+        <div class="eyebrow">How It Works</div>
+        <h2>Resilient by design — zero central servers</h2>
+        <p>Your devices and your friends' always-on watchers meet at public encrypted relays. As long as one watcher is running, your alarm gets out.</p>
+      </div>
+
+      <div class="flowDiagram" aria-hidden="true">
+        <svg viewBox="0 0 920 150" fill="none">
+          <rect x="14" y="25" width="186" height="100" rx="18" fill="#FCE8E6" stroke="#FAD2CF" stroke-width="2"/>
+          <text x="107" y="66" text-anchor="middle" fill="#202124" font-family="Plus Jakarta Sans, sans-serif" font-size="16" font-weight="700">1. Trigger</text>
+          <text x="107" y="90" text-anchor="middle" fill="#5F6368" font-family="Roboto, sans-serif" font-size="13">Phone or Windows PC</text>
+
+          <path d="M210 75 H252" stroke="#1A73E8" stroke-width="3" stroke-linecap="round"/>
+          <polygon points="258,75 248,69 248,81" fill="#1A73E8"/>
+
+          <rect x="262" y="25" width="194" height="100" rx="18" fill="#E8F0FE" stroke="#D2E3FC" stroke-width="2"/>
+          <text x="359" y="66" text-anchor="middle" fill="#202124" font-family="Plus Jakarta Sans, sans-serif" font-size="16" font-weight="700">2. Encrypted Relays</text>
+          <text x="359" y="90" text-anchor="middle" fill="#5F6368" font-family="Roboto, sans-serif" font-size="13">Nostr (no central server)</text>
+
+          <path d="M466 75 H508" stroke="#F9AB00" stroke-width="3" stroke-linecap="round"/>
+          <polygon points="514,75 504,69 504,81" fill="#F9AB00"/>
+
+          <rect x="518" y="25" width="194" height="100" rx="18" fill="#FEF7E0" stroke="#FEEFC3" stroke-width="2"/>
+          <text x="615" y="66" text-anchor="middle" fill="#202124" font-family="Plus Jakarta Sans, sans-serif" font-size="16" font-weight="700">3. Watchers</text>
+          <text x="615" y="90" text-anchor="middle" fill="#5F6368" font-family="Roboto, sans-serif" font-size="13">Outbound-only clocks</text>
+
+          <path d="M722 75 H764" stroke="#34A853" stroke-width="3" stroke-linecap="round"/>
+          <polygon points="770,75 760,69 760,81" fill="#34A853"/>
+
+          <rect x="774" y="25" width="132" height="100" rx="18" fill="#E6F4EA" stroke="#CEEAD6" stroke-width="2"/>
+          <text x="840" y="66" text-anchor="middle" fill="#202124" font-family="Plus Jakarta Sans, sans-serif" font-size="16" font-weight="700">4. Angels</text>
+          <text x="840" y="90" text-anchor="middle" fill="#5F6368" font-family="Roboto, sans-serif" font-size="13">Push &amp; Telegram</text>
+        </svg>
+      </div>
+
+      <div class="grid4">
+        <div class="stepCard">
+          <span class="stepNum" style="background:var(--red-soft);color:var(--red-ink)">1</span>
+          <h3>Trigger</h3>
+          <p>Started from your phone (Sync timer, Back Tap, automation) or Windows PC unlock.</p>
+        </div>
+        <div class="stepCard">
+          <span class="stepNum" style="background:var(--blue-soft);color:var(--blue)">2</span>
+          <h3>Encrypted Relays</h3>
+          <p>Messages travel wrapped through multiple public Nostr relays so no single host can block them.</p>
+        </div>
+        <div class="stepCard">
+          <span class="stepNum" style="background:var(--yellow-soft);color:var(--yellow-ink)">3</span>
+          <h3>Independent Watchers</h3>
+          <p>Always-on Docker or PC watchers in friends' homes keep the clocks and escalate only if needed.</p>
+        </div>
+        <div class="stepCard">
+          <span class="stepNum" style="background:var(--green-soft);color:var(--green-ink)">4</span>
+          <h3>Your Angels</h3>
+          <p>Trusted contacts receive Web Push and Telegram alerts with one-tap <em>I am calling</em> and <em>Resolved</em> actions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download" class="band alt">
+    <div class="wrap">
+      <div class="secHead">
+        <div class="eyebrow">Download &amp; Install</div>
+        <h2>Get protected — or help protect someone</h2>
+        <p>Install the discreet mobile web app on your phone, protect your Windows laptop, or run a watcher for your circle.</p>
+      </div>
+
+      <div class="grid3">
+        <div class="dlCard" id="download-webapp">
+          <div class="dlIcon bg-blue" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </div>
+          <h3>Phone Web App ("Sync")</h3>
+          <div class="dlSub">iPhone (iOS 16.4+) &amp; Android</div>
+          <div class="dlBody">
+            <p>Deliberately named <strong>Sync</strong> on your home screen. Works both as your safety app (timer, silent button, invite links) and to receive push alarms as someone's angel.</p>
+            <div class="miniSteps">
+              <div>
+                <strong>On iPhone (Safari)</strong>
+                1. Open the app in Safari and tap <strong>Share</strong>.<br>
+                2. Tap <strong>Add to Home Screen</strong> and launch Sync from there.
+              </div>
+              <div>
+                <strong>On Android (Chrome)</strong>
+                1. Open the app in Chrome.<br>
+                2. Tap <strong>Install app</strong> (or <strong>Add to Home Screen</strong>).
+              </div>
+            </div>
+          </div>
+          <div class="dlFoot">
+            <a class="btn btnPrimary" href="./app.html">Open &amp; Install Web App</a>
+          </div>
+        </div>
+
+        <div class="dlCard">
+          <div class="dlIcon bg-green" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34A853" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="12" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/>
+            </svg>
+          </div>
+          <h3>Windows Agent</h3>
+          <div class="dlSub">warn-agent.exe · Silent PC agent</div>
+          <div class="dlBody">
+            <p>Runs invisibly in the background on Windows. Detects every logon and unlock, checks your secret hotkey, supports a duress key, and optionally runs a built-in watcher.</p>
+            <div class="codeWrap">
+              <button type="button" class="copyBtn" data-copy="winCode">Copy</button>
+              <pre id="winCode">.\warn-agent.exe init --device laptop
+.\warn-agent.exe run</pre>
+            </div>
+          </div>
+          <div class="dlFoot">
+            <a class="btn btnPrimary" href="https://github.com/p2pfiat/angel/releases/latest" target="_blank" rel="noopener">Download for Windows</a>
+          </div>
+        </div>
+
+        <div class="dlCard">
+          <div class="dlIcon bg-yellow" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A5B00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="7" rx="2"/><rect x="2" y="13" width="20" height="7" rx="2"/><line x1="6" y1="7.5" x2="6.01" y2="7.5"/><line x1="6" y1="16.5" x2="6.01" y2="16.5"/>
+            </svg>
+          </div>
+          <h3>Docker Watcher</h3>
+          <div class="dlSub">warn-watcher · Home server / NAS / Mini-PC</div>
+          <div class="dlBody">
+            <p>Run an always-on watcher in another household. Makes outbound connections only — no open ports, reverse proxies, or port forwarding needed.</p>
+            <div class="codeWrap">
+              <button type="button" class="copyBtn" data-copy="dockerCode">Copy</button>
+              <pre id="dockerCode">services:
+  watcher:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+
+# Start with:
+docker compose up -d --build</pre>
+            </div>
+          </div>
+          <div class="dlFoot">
+            <a class="btn btnOutline" href="https://github.com/p2pfiat/angel" target="_blank" rel="noopener">View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy" class="band">
+    <div class="wrap">
+      <div class="secHead">
+        <div class="eyebrow">Privacy &amp; Trust</div>
+        <h2>Built for safety without surveillance</h2>
+        <p>Unlike family-locator apps, Angel never turns safety into constant tracking.</p>
+      </div>
+
+      <div class="grid4">
+        <div class="privCard">
+          <div class="privIcon bg-blue" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="10.5" y1="7.6" x2="6.5" y2="16.4"/><line x1="13.5" y1="7.6" x2="17.5" y2="16.4"/><line x1="8" y1="19" x2="16" y2="19"/>
+            </svg>
+          </div>
+          <h3>No central server</h3>
+          <p>Every message goes through replaceable relays to your own circle's watchers — no company can shut it down.</p>
+        </div>
+        <div class="privCard">
+          <div class="privIcon bg-green" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34A853" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <h3>Not a location tracker</h3>
+          <p>Nobody can follow where you are. Your position is included only when an alarm actually fires.</p>
+        </div>
+        <div class="privCard">
+          <div class="privIcon bg-yellow" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A5B00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h3>End-to-end encrypted</h3>
+          <p>Nostr NIP-59 gift wraps and RFC 8291 Web Push keep relays, Apple, and Google blind to your alerts.</p>
+        </div>
+        <div class="privCard">
+          <div class="privIcon bg-red" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA4335" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </div>
+          <h3>Discreet by design</h3>
+          <p>Plain <em>Sync</em> icon on your phone and a silent Windows agent with no popups or default hotkeys.</p>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
-<div id="toast" role="status" aria-live="polite" hidden><span id="toastText"></span><button id="toastUndo" type="button" hidden>Undo</button></div>
-<script src="app.js"></script>
+
+<footer>
+  <div class="wrap footInner">
+    <div>
+      <strong style="color:var(--ink);font-family:'Plus Jakarta Sans',sans-serif">Angel</strong> — Open-source decentralized duress &amp; check-in network.
+      <p class="footNote">Complements and never replaces official emergency services. Always call your local emergency number first when it is safe to do so.</p>
+    </div>
+    <div class="footLinks">
+      <a href="./app.html">Launch Sync Web App</a>
+      <a href="https://github.com/p2pfiat/angel" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/p2pfiat/angel/releases/latest" target="_blank" rel="noopener">Releases</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var copyButtons = document.querySelectorAll('[data-copy]');
+  for (var i = 0; i < copyButtons.length; i++) {
+    copyButtons[i].addEventListener('click', function () {
+      var btn = this;
+      var el = document.getElementById(btn.getAttribute('data-copy'));
+      if (!el) return;
+      var text = el.textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = 'Copied';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1800);
+        }).catch(function () {
+          btn.textContent = 'Copy manually';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1800);
+        });
+      }
+    });
+  }
+
+  var canvas = document.getElementById('netCanvas');
+  var box = document.getElementById('canvasBox');
+  if (!canvas || !box || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var simStatus = document.getElementById('simStatus');
+  var simDot = document.getElementById('simDot');
+  var btnOk = document.getElementById('simOk');
+  var btnAlarm = document.getElementById('simAlarm');
+
+  var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mode = 'idle'; // 'idle' | 'ok' | 'alarm'
+  var modeStart = 0;
+  var yaw = 0.45;
+  var pitch = 0.42;
+  var targetYaw = 0.45;
+  var targetPitch = 0.42;
+  var dragging = false;
+  var lastX = 0;
+  var lastY = 0;
+
+  var nodes = [
+    { id: 'device', label: 'Your Device', ring: 0, angle: 0, y: 0, color: '#202124', r: 14 },
+    { id: 'r1', label: 'Relay', ring: 1, angle: 0.4, y: 0.14, color: '#4285F4', r: 8 },
+    { id: 'r2', label: 'Relay', ring: 1, angle: 2.5, y: -0.12, color: '#4285F4', r: 8 },
+    { id: 'r3', label: 'Relay', ring: 1, angle: 4.6, y: 0.08, color: '#4285F4', r: 8 },
+    { id: 'w1', label: 'Watcher', ring: 2, angle: 1.1, y: 0.22, color: '#FBBC04', r: 10 },
+    { id: 'w2', label: 'Watcher', ring: 2, angle: 4.1, y: -0.20, color: '#FBBC04', r: 10 },
+    { id: 'a1', label: 'Angel', ring: 3, angle: 0.2, y: -0.10, color: '#34A853', r: 10 },
+    { id: 'a2', label: 'Angel', ring: 3, angle: 2.3, y: 0.20, color: '#34A853', r: 10 },
+    { id: 'a3', label: 'Angel', ring: 3, angle: 4.3, y: -0.15, color: '#34A853', r: 10 }
+  ];
+
+  var edges = [
+    [0, 1], [0, 2], [0, 3],
+    [1, 4], [2, 4], [2, 5], [3, 5],
+    [4, 6], [4, 7], [5, 7], [5, 8]
+  ];
+
+  function setMode(next) {
+    mode = next;
+    modeStart = performance.now();
+    btnOk.classList.toggle('active', next === 'ok');
+    btnAlarm.classList.toggle('active', next === 'alarm');
+    if (next === 'ok') {
+      simDot.style.background = '#34A853';
+      simStatus.textContent = 'Safe check-in — watchers cleared silently';
+    } else if (next === 'alarm') {
+      simDot.style.background = '#EA4335';
+      simStatus.textContent = 'Silent alarm — encrypted alert reaching angels';
+    } else {
+      simDot.style.background = '#4285F4';
+      simStatus.textContent = 'Watchers active — holding no alarm';
+    }
+  }
+
+  btnOk.addEventListener('click', function () { setMode(mode === 'ok' ? 'idle' : 'ok'); });
+  btnAlarm.addEventListener('click', function () { setMode(mode === 'alarm' ? 'idle' : 'alarm'); });
+
+  box.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    targetYaw += (e.clientX - lastX) * 0.008;
+    targetPitch = Math.max(-0.9, Math.min(0.9, targetPitch + (e.clientY - lastY) * 0.006));
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('pointerup', function () { dragging = false; });
+
+  function project(x, y, z, w, h) {
+    var cy = Math.cos(yaw), sy = Math.sin(yaw);
+    var cp = Math.cos(pitch), sp = Math.sin(pitch);
+    var x1 = x * cy - z * sy;
+    var z1 = x * sy + z * cy;
+    var y2 = y * cp - z1 * sp;
+    var z2 = y * sp + z1 * cp;
+    var fov = 420;
+    var scale = fov / (fov + z2 + 120);
+    return {
+      x: w * 0.5 + x1 * scale,
+      y: h * 0.5 + y2 * scale,
+      z: z2,
+      scale: scale
+    };
+  }
+
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = box.clientWidth;
+    var h = box.clientHeight;
+    if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: w, h: h };
+  }
+
+  function draw(now) {
+    var size = resize();
+    var w = size.w;
+    var h = size.h;
+    ctx.clearRect(0, 0, w, h);
+
+    if (!dragging && !reducedMotion) {
+      targetYaw += 0.0022;
+    }
+    yaw += (targetYaw - yaw) * 0.12;
+    pitch += (targetPitch - pitch) * 0.12;
+
+    var baseR = Math.min(w, h) * 0.37;
+    var rings = [0, baseR * 0.42, baseR * 0.74, baseR * 1.06];
+
+    // Subtle 3D orbital rings
+    for (var rIdx = 1; rIdx <= 3; rIdx++) {
+      ctx.beginPath();
+      for (var step = 0; step <= 48; step++) {
+        var ang = (step / 48) * Math.PI * 2;
+        var pt = project(Math.cos(ang) * rings[rIdx], 0, Math.sin(ang) * rings[rIdx], w, h);
+        if (step === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.strokeStyle = 'rgba(218, 220, 224, 0.7)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    var t = reducedMotion ? 0 : now * 0.00035;
+    var projected = [];
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      var rad = rings[n.ring];
+      var speed = n.ring === 0 ? 0 : (n.ring === 1 ? 0.8 : n.ring === 2 ? -0.45 : 0.25);
+      var a = n.angle + t * speed;
+      var px = Math.cos(a) * rad;
+      var pz = Math.sin(a) * rad;
+      var py = n.y * baseR * 0.65;
+      var p = project(px, py, pz, w, h);
+      p.node = n;
+      projected.push(p);
+    }
+
+    var elapsed = (now - modeStart) * 0.001;
+    // Edges and animated signal pulses
+    for (var e = 0; e < edges.length; e++) {
+      var from = projected[edges[e][0]];
+      var to = projected[edges[e][1]];
+      var isOuter = to.node.ring === 3;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      if (mode === 'alarm') {
+        ctx.strokeStyle = 'rgba(234, 67, 53, 0.45)';
+        ctx.lineWidth = 1.8;
+      } else if (mode === 'ok' && !isOuter) {
+        ctx.strokeStyle = 'rgba(52, 168, 83, 0.55)';
+        ctx.lineWidth = 1.8;
+      } else {
+        ctx.strokeStyle = 'rgba(66, 133, 244, 0.22)';
+        ctx.lineWidth = 1.2;
+      }
+      ctx.stroke();
+
+      if (!reducedMotion && (mode === 'alarm' || (mode === 'ok' && !isOuter) || (mode === 'idle' && e % 2 === 0))) {
+        var phase = ((now * (mode === 'alarm' ? 0.0014 : 0.0006)) + e * 0.23) % 1;
+        var sx = from.x + (to.x - from.x) * phase;
+        var sy = from.y + (to.y - from.y) * phase;
+        ctx.beginPath();
+        ctx.arc(sx, sy, mode === 'alarm' ? 3.8 : 2.8, 0, Math.PI * 2);
+        ctx.fillStyle = mode === 'alarm' ? '#EA4335' : mode === 'ok' ? '#34A853' : '#4285F4';
+        ctx.fill();
+      }
+    }
+
+    // Sort back-to-front by z
+    var order = projected.slice().sort(function (a, b) { return b.z - a.z; });
+    for (var k = 0; k < order.length; k++) {
+      var item = order[k];
+      var nodeColor = item.node.color;
+      if (mode === 'alarm' && item.node.ring === 3) {
+        nodeColor = '#EA4335';
+      } else if (mode === 'ok' && item.node.id === 'device') {
+        nodeColor = '#34A853';
+      }
+      var radius = item.node.r * item.scale;
+
+      if (mode === 'alarm' && (item.node.ring === 3 || item.node.ring === 0) && !reducedMotion) {
+        var pulse = (Math.sin(elapsed * 5 + k) + 1) * 0.5;
+        ctx.beginPath();
+        ctx.arc(item.x, item.y, radius + 4 + pulse * 8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(234, 67, 53, ' + (0.28 - pulse * 0.18).toFixed(2) + ')';
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.arc(item.x, item.y, radius + 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(item.x, item.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = nodeColor;
+      ctx.fill();
+
+      ctx.font = '500 11px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = '#3C4043';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.node.label, item.x, item.y + radius + 15);
+    }
+
+    if (!reducedMotion) {
+      requestAnimationFrame(draw);
+    }
+  }
+
+  requestAnimationFrame(draw);
+  window.addEventListener('resize', function () {
+    if (reducedMotion) requestAnimationFrame(draw);
+  });
+})();
+</script>
 </body>
 </html>

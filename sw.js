@@ -1,8 +1,8 @@
 // Offline cache. Network first: with a connection the app always gets the newest files
 // (and refreshes the cache); without one it runs from the cache. Bump CACHE with each release
 // so old copies are dropped.
-const CACHE = 'sync-v23'
-const FILES = ['./', './index.html', './app.js', './manifest.webmanifest']
+const CACHE = 'sync-v24'
+const FILES = ['./', './index.html', './app.html', './app.js', './manifest.webmanifest']
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -70,7 +70,7 @@ self.addEventListener('push', (e) => {
 // Tapping it opens the angel screen.
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
-  const url = new URL('./#angel', self.registration.scope).href
+  const url = new URL('./app.html#angel', self.registration.scope).href
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ws) => {
       for (const w of ws) {
