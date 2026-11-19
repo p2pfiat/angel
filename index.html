@@ -20,7 +20,7 @@
       if (a && a.vips && Object.keys(a.vips).length) configured = true;
     } catch (e) {}
   }
-  if (isAppHash || standalone || configured) {
+  if (isAppHash || (!forceHome && (standalone || configured))) {
     location.replace('./app.html' + h);
   }
 })();
@@ -548,6 +548,44 @@
     padding-top: 10px;
     border-top: 1px solid #e8eaed;
   }
+  .qrBox {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .qrBox canvas {
+    width: 112px;
+    height: 112px;
+    flex: none;
+    border-radius: 10px;
+    border: 1px solid #e8eaed;
+    background: #fff;
+    image-rendering: pixelated;
+  }
+  .qrBox strong {
+    display: block;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .qrBox span {
+    display: block;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .starterNote {
+    font-size: 13px !important;
+    background: var(--blue-soft);
+    color: #174EA6 !important;
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
   .codeWrap {
     position: relative;
     background: #202124;
@@ -793,7 +831,7 @@
           </div>
           <span class="useTag tag-red">Immediate duress</span>
           <h3>Hidden Emergency Gesture</h3>
-          <p>In immediate danger on the street or at a party? A discreet triple-tap on the back of your iPhone (Back Tap), Action Button, or holding the quiet <strong>Sync</strong> button alerts every angel immediately.</p>
+          <p>In immediate danger on iPhone or Android? Holding the quiet <strong>Sync</strong> button sends an immediate encrypted alert with your location — and on iPhone you can also trigger it via triple Back Tap or the Action Button.</p>
         </article>
 
         <article class="card">
@@ -811,7 +849,7 @@
           </div>
           <span class="useTag tag-blue">Forced access</span>
           <h3>Forced Phone Unlock</h3>
-          <p>Forced to unlock your phone or open a banking app? An iOS automation silently starts a short countdown. Only a subtle double-tap cancels it — otherwise your angels are alerted automatically.</p>
+          <p>Forced to unlock your phone? You can configure <strong>Sync</strong> on iPhone or Android to send automatically when opened, and on iPhone combine it with Shortcuts when opening a banking app (cancelled with a double-tap).</p>
         </article>
 
         <article class="card">
@@ -914,24 +952,32 @@
             </svg>
           </div>
           <h3>Phone Web App ("Sync")</h3>
-          <div class="dlSub">iPhone (iOS 16.4+) &amp; Android</div>
+          <div class="dlSub">iPhone (iOS 16.4+) &amp; Android · No app store</div>
           <div class="dlBody">
-            <p>Deliberately named <strong>Sync</strong> on your home screen. Works both as your safety app (timer, silent button, invite links) and to receive push alarms as someone's angel.</p>
-            <div class="miniSteps">
+            <p>Deliberately named <strong>Sync</strong> on your home screen. Works on both <strong>iPhone</strong> and <strong>Android</strong> as your safety app (timer, silent hold button, test alerts) and to receive Web Push alarms as someone's angel.</p>
+            <div class="qrBox" id="homeQrBox">
+              <canvas id="homeAppQr" aria-label="QR code to open Sync web app on your phone"></canvas>
               <div>
-                <strong>On iPhone (Safari)</strong>
-                1. Open the app in Safari and tap <strong>Share</strong>.<br>
-                2. Tap <strong>Add to Home Screen</strong> and launch Sync from there.
-              </div>
-              <div>
-                <strong>On Android (Chrome)</strong>
-                1. Open the app in Chrome.<br>
-                2. Tap <strong>Install app</strong> (or <strong>Add to Home Screen</strong>).
+                <strong>Scan with your phone</strong>
+                <span>Sync runs best on your phone's home screen. Point your iPhone or Android camera here to install it.</span>
               </div>
             </div>
+            <div class="miniSteps">
+              <div id="stepsIos">
+                <strong>On iPhone (Safari)</strong>
+                1. Open Sync in Safari and tap <strong>Share</strong>.<br>
+                2. Tap <strong>Add to Home Screen</strong>, then open <strong>Sync</strong> from your Home Screen.
+              </div>
+              <div id="stepsAndroid">
+                <strong>On Android (Chrome)</strong>
+                1. Open Sync in Chrome.<br>
+                2. Tap <strong>Install app</strong> (or menu <strong>⋮</strong> → <strong>Add to Home screen</strong>).
+              </div>
+            </div>
+            <p class="starterNote"><strong>Instant start:</strong> Enroll with our Phase 1 <strong>courtesy starter server</strong> in one tap, invite your angels, then add your own Windows or Docker watcher later for full independence.</p>
           </div>
           <div class="dlFoot">
-            <a class="btn btnPrimary" href="./app.html">Open &amp; Install Web App</a>
+            <a class="btn btnPrimary" id="homeOpenApp" href="./app.html">Open &amp; Install Web App</a>
           </div>
         </div>
 
@@ -941,10 +987,10 @@
               <rect x="3" y="4" width="18" height="12" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/>
             </svg>
           </div>
-          <h3>Windows Agent</h3>
-          <div class="dlSub">warn-agent.exe · Silent PC agent</div>
+          <h3>Windows Agent &amp; Watcher</h3>
+          <div class="dlSub">warn-agent.exe · Silent PC agent + optional watcher</div>
           <div class="dlBody">
-            <p>Runs invisibly in the background on Windows. Detects every logon and unlock, checks your secret hotkey, supports a duress key, and optionally runs a built-in watcher.</p>
+            <p>Runs invisibly in the background on Windows. Detects every logon and unlock, checks your secret hotkey, and can run a built-in watcher (<code>[watcher]</code>) for yourself or to back up the courtesy server.</p>
             <div class="codeWrap">
               <button type="button" class="copyBtn" data-copy="winCode">Copy</button>
               <pre id="winCode">.\warn-agent.exe init --device laptop
@@ -1296,5 +1342,6 @@ docker compose up -d --build</pre>
   });
 })();
 </script>
+<script src="home.js" defer></script>
 </body>
 </html>

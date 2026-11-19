@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Sync">
 <meta name="referrer" content="no-referrer">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <title>Sync</title>
 <style>
   :root {
@@ -127,7 +129,13 @@
   .card.alarm-quiet { opacity: .82; }
   .row3 a.btnLink { flex: 1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font: inherit; font-weight: 500;
                     border-radius: 10px; padding: 10px 16px; min-height: var(--tap); background: var(--card); color: var(--accent); border: 1px solid var(--line); }
-  #angelQr, #protectQr { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 6px; }
+  #angelQr, #protectQr, #desktopQr { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 6px; }
+  .sub a, .hint a { color: var(--accent); }
+  .guideStep { padding: 10px 0; border-top: 1px solid var(--line); }
+  .guideStep:first-of-type { border-top: 0; padding-top: 4px; }
+  .guideRow { display: flex; gap: 10px; align-items: flex-start; }
+  .guideRow .state { margin-top: 6px; }
+  .guideRow .grow { flex: 1; min-width: 0; }
 
   /* Messages at the bottom ("Saved", "Removed … Undo") */
   #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 10;
@@ -231,7 +239,39 @@
     </div>
 
     <!-- "I got a link": here on a new phone; under Invite once set up (moved by the app). -->
-    <div id="firstRun"></div>
+    <div id="firstRun">
+      <div class="card" id="desktopCard" hidden>
+        <h2>Install Sync on your phone</h2>
+        <p class="hint">Sync works on both <b>iPhone</b> (iOS 16.4+) and <b>Android</b>. Scan this QR code on your phone to install it on your Home Screen.</p>
+        <canvas id="desktopQr" aria-label="QR code to install Sync on your phone"></canvas>
+        <div class="row3"><a class="btnLink" href="./?home#download" target="_blank" rel="noopener">Get Windows / Docker watcher</a></div>
+      </div>
+      <div class="card" id="installCard" hidden>
+        <div id="installIos" hidden>
+          <h2>Add Sync to your Home Screen first</h2>
+          <p class="hint">On an iPhone, Safari and Home Screen apps keep separate storage, and alarms arrive only in the Home Screen app:</p>
+          <ol class="hint">
+            <li>Tap Share, then <b>Add to Home Screen</b>.</li>
+            <li>Open <b>Sync</b> from the Home Screen to get started.</li>
+          </ol>
+        </div>
+        <div id="installAndroid" hidden>
+          <h2>Install Sync on your phone</h2>
+          <p class="hint">Installing puts a discreet <b>Sync</b> icon on your home screen and keeps your setup safe.</p>
+          <div class="row3" style="margin-top:10px"><button id="androidInstallBtn" type="button" class="primary" hidden>Install Sync</button></div>
+          <p class="sub" style="margin-top:8px">Or open Chrome's menu (<b>⋮</b>) and tap <b>Install app</b> / <b>Add to Home screen</b>.</p>
+        </div>
+      </div>
+      <div class="card" id="courtesyCard" hidden>
+        <h2>Start right away</h2>
+        <p class="hint">Connect to the <b>Angel courtesy server</b> to try Sync right away with no server setup. This starter server sees your alarms; add your own Windows or Docker watcher later for full independence.</p>
+        <label for="courtesyName">Your name, as your angels will see it</label>
+        <input id="courtesyName" type="text" autocomplete="name" placeholder="e.g. Alex">
+        <div class="row3" style="margin-top:12px"><button id="courtesyGo" type="button" class="primary">Start with courtesy server</button></div>
+        <div id="courtesyList" class="hint" style="margin-top:10px"></div>
+        <div class="err" id="courtesyError" role="alert"></div>
+      </div>
+    </div>
     <div class="card" id="pasteCard">
       <h2>I got a link</h2>
       <p class="hint">To be someone's angel, to be protected, or to add a server: copy the link you got, then tap Paste.</p>
@@ -243,11 +283,50 @@
       <div class="err" id="pasteError" role="alert"></div>
     </div>
 
+    <div class="card" id="setupGuide" hidden>
+      <h2>Getting started</h2>
+      <div class="guideStep">
+        <div class="guideRow">
+          <span class="state ok" id="guideServersDot"></span>
+          <div class="grow">
+            <div id="guideServers"></div>
+            <div class="sub" id="guideServersSub"></div>
+          </div>
+        </div>
+      </div>
+      <div class="guideStep" id="guideAngels">
+        <div class="guideRow">
+          <span class="state warn" id="guideAngelsDot"></span>
+          <div class="grow">
+            <div id="guideAngelsText"></div>
+            <div class="row3" style="margin-top:8px">
+              <button id="guideInviteBtn" type="button" class="primary">Invite an angel</button>
+              <button id="guideTestBtn" type="button" hidden>Send test alarm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="guideStep" id="guideWatcher">
+        <div class="guideRow">
+          <span class="state" id="guideWatcherDot"></span>
+          <div class="grow">
+            <div>3. Add your own backup watcher</div>
+            <div class="sub">Install your own Windows (<code>warn-agent.exe</code>) or Docker watcher so you don't rely on a single starter server.</div>
+            <div class="row3" style="margin-top:8px">
+              <a class="btnLink" href="./?home#download" target="_blank" rel="noopener">Get Windows / Docker watcher</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px"><span></span><button class="plain" id="guideDismiss" type="button" hidden>Hide checklist</button></div>
+    </div>
+
     <section class="group" id="gStatus" aria-labelledby="hStatus">
       <h3 id="hStatus">Status</h3>
       <div class="card">
         <p id="serverSummary" class="hint">Checking your servers…</p>
         <div id="watchList"></div>
+        <p id="watcherTip" class="sub" style="margin-top:10px" hidden>Starter server only — <a href="./?home#download" target="_blank" rel="noopener">add your own Windows or Docker watcher</a> when ready.</p>
         <div class="row3" style="margin-top:10px"><button id="checkNow" type="button">Check now</button></div>
       </div>
     </section>
@@ -282,7 +361,10 @@
           <p class="hint">Angels get your alarms. Invite someone you trust.</p>
         </div>
         <p class="hint" id="angelsHint" style="margin-top:6px">Duress alarms go to every angel who is on. Changes are saved at once.</p>
-        <div class="row3" style="margin-top:10px"><button id="angelInvite" type="button">Invite an angel</button></div>
+        <div class="row3" style="margin-top:10px">
+          <button id="angelInvite" type="button">Invite an angel</button>
+          <button id="angelTest" type="button" hidden>Send test alarm</button>
+        </div>
         <div id="angelCard" hidden>
           <div class="tabs" role="tablist">
             <button id="angelUseApp" type="button" role="tab">In the app</button>
