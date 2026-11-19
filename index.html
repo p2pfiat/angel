@@ -829,7 +829,7 @@
               <g><circle cx="352" cy="125" r="12" fill="#fff"/><circle cx="352" cy="125" r="9.5" fill="#34A853"/><text x="352" y="148" text-anchor="middle" font-size="11" font-weight="500" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043">Angel</text></g>
             </g>
           </svg>
-          <span class="dragHint">Drag to tilt</span>
+          <span class="dragHint">Drag to tilt · Scroll or pinch to zoom</span>
         </div>
         <div class="stageControls">
           <div class="simButtons">
@@ -1205,11 +1205,13 @@ docker compose up -d --build</pre>
   var modeStart = 0;
   var yaw = 0.45;
   var pitch = 0.42;
+  var zoom = 1;
   var targetYaw = 0.45;
   var targetPitch = 0.42;
-  var dragging = false;
-  var lastX = 0;
-  var lastY = 0;
+  var targetZoom = 1;
+  var pointers = Object.create(null);
+  var pointerCount = 0;
+  var lastPinchDist = 0;
   var simTime = 0;
   var lastStamp = null;
   var rafId = 0;
@@ -1292,7 +1294,7 @@ docker compose up -d --build</pre>
     var y2 = y * cp - z1 * sp;
     var z2 = y * sp + z1 * cp;
     var fov = 420;
-    var scale = fov / (fov + z2 + 120);
+    var scale = (fov / (fov + z2 + 120)) * zoom;
     return {
       x: W * 0.5 + x1 * scale,
       y: H * 0.5 + y2 * scale,
@@ -1308,11 +1310,12 @@ docker compose up -d --build</pre>
 
     if (!paused) {
       simTime += dt;
-      if (!dragging) targetYaw += 0.0022 * (dt / 16.667);
+      if (pointerCount === 0) targetYaw += 0.0022 * (dt / 16.667);
     }
-    var ease = paused && !dragging ? 1 : 0.14;
+    var ease = 0.16;
     yaw += (targetYaw - yaw) * ease;
     pitch += (targetPitch - pitch) * ease;
+    zoom += (targetZoom - zoom) * ease;
 
     var baseR = Math.min(W, H) * 0.37;
     var rings = [0, baseR * 0.42, baseR * 0.74, baseR * 1.06];
@@ -1421,7 +1424,8 @@ docker compose up -d --build</pre>
     rafId = requestAnimationFrame(function (stamp) {
       rafId = 0;
       renderFrame(stamp);
-      if (!paused) schedule();
+      var settling = Math.abs(targetZoom - zoom) > 0.001 || Math.abs(targetYaw - yaw) > 0.001 || Math.abs(targetPitch - pitch) > 0.001;
+      if (!paused || settling) schedule();
     });
   }
 
@@ -1455,22 +1459,61 @@ docker compose up -d --build</pre>
     });
   }
 
+  function pinchDist() {
+    var ids = Object.keys(pointers);
+    if (ids.length < 2) return 0;
+    var a = pointers[ids[0]], b = pointers[ids[1]];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
   box.addEventListener('pointerdown', function (e) {
-    dragging = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
+    var id = String(e.pointerId);
+    pointers[id] = { x: e.clientX, y: e.clientY };
+    pointerCount = Object.keys(pointers).length;
+    lastPinchDist = pointerCount >= 2 ? pinchDist() : 0;
     try { box.setPointerCapture(e.pointerId); } catch (err) {}
   });
   window.addEventListener('pointermove', function (e) {
-    if (!dragging) return;
-    targetYaw += (e.clientX - lastX) * 0.008;
-    targetPitch = Math.max(-0.9, Math.min(0.9, targetPitch + (e.clientY - lastY) * 0.006));
-    lastX = e.clientX;
-    lastY = e.clientY;
+    var id = String(e.pointerId);
+    if (!(id in pointers)) return;
+    var prev = pointers[id];
+    pointers[id] = { x: e.clientX, y: e.clientY };
+    if (pointerCount === 1) {
+      targetYaw += (e.clientX - prev.x) * 0.008;
+      targetPitch = Math.max(-0.9, Math.min(0.9, targetPitch + (e.clientY - prev.y) * 0.006));
+      if (paused) schedule();
+    } else if (pointerCount >= 2) {
+      var d = pinchDist();
+      if (lastPinchDist > 0 && d > 0) {
+        targetZoom = Math.max(0.65, Math.min(2.2, targetZoom * (d / lastPinchDist)));
+        if (paused) schedule();
+      }
+      lastPinchDist = d;
+    }
+  });
+  function releasePointer(e) {
+    var id = String(e.pointerId);
+    if (!(id in pointers)) return;
+    delete pointers[id];
+    pointerCount = Object.keys(pointers).length;
+    lastPinchDist = pointerCount >= 2 ? pinchDist() : 0;
+  }
+  window.addEventListener('pointerup', releasePointer);
+  window.addEventListener('pointercancel', releasePointer);
+
+  box.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var factor = Math.exp(-e.deltaY * 0.0015);
+    targetZoom = Math.max(0.65, Math.min(2.2, targetZoom * factor));
+    if (paused) schedule();
+  }, { passive: false });
+
+  box.addEventListener('dblclick', function () {
+    targetZoom = 1;
+    targetYaw = 0.45;
+    targetPitch = 0.42;
     if (paused) schedule();
   });
-  window.addEventListener('pointerup', function () { dragging = false; });
-  window.addEventListener('pointercancel', function () { dragging = false; });
 
   renderFrame(0);
   schedule();
