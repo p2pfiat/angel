@@ -76,8 +76,12 @@
   .bar.scrolled { border-bottom-color: var(--line); }
   .bar h1 { margin: 0; font-size: 20px; text-align: center; grid-column: 2; grid-row: 1; }
   button.back { background: transparent; color: var(--accent); padding: 10px 8px 10px 0; font-size: 17px; text-align: left; grid-column: 1; grid-row: 1; }
+  button.barAct { background: transparent; color: var(--accent); padding: 10px 0 10px 8px; font-size: 15px; text-align: right; grid-column: 3; grid-row: 1; }
   .group { margin-top: 26px; }
   .group > h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 0 4px; text-transform: uppercase; letter-spacing: .05em; }
+  .groupHead { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 0 4px; }
+  .groupHead h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0; text-transform: uppercase; letter-spacing: .05em; }
+  .groupHead button.link { min-height: 32px; padding: 4px 2px; font-size: 14px; }
   .item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); min-height: 56px; }
   .item:first-child { border-top: 0; padding-top: 0; }
   .item .grow { flex: 1; min-width: 0; }
@@ -111,6 +115,18 @@
   details { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 6px; }
   summary { font-size: 15px; color: var(--muted); cursor: pointer; padding: 12px 4px; min-height: var(--tap); }
   .alarmText { white-space: pre-wrap; -webkit-user-select: text; user-select: text; }
+  .alarmHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .alarmHead h2 { margin: 0; }
+  .badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; border-radius: 999px; padding: 2px 8px; white-space: nowrap; flex: none;
+           border: 1px solid var(--line); color: var(--muted); }
+  .badge.bad { border-color: var(--bad); color: var(--bad); }
+  .badge.warn { border-color: var(--warn); color: var(--warn); }
+  .badge.ok { border-color: var(--ok); color: var(--ok); }
+  .card.alarm-duress { border-left: 4px solid var(--bad); }
+  .card.alarm-missed { border-left: 4px solid var(--warn); }
+  .card.alarm-quiet { opacity: .82; }
+  .row3 a.btnLink { flex: 1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font: inherit; font-weight: 500;
+                    border-radius: 10px; padding: 10px 16px; min-height: var(--tap); background: var(--card); color: var(--accent); border: 1px solid var(--line); }
   #angelQr, #protectQr { display: block; margin: 6px auto 12px; width: 200px; height: 200px; image-rendering: pixelated; border-radius: 6px; }
 
   /* Messages at the bottom ("Saved", "Removed … Undo") */
@@ -147,18 +163,41 @@
   </section>
 
   <section id="angel" hidden>
-    <h1>Angel</h1>
-    <p id="angelFor"></p>
-    <p class="hint" id="angelNotifyState"></p>
-    <div class="row3"><button id="angelNotify" type="button" hidden>Turn on notifications</button></div>
-    <p class="hint" id="angelNote"></p>
+    <div class="bar" id="angelBar">
+      <button class="back" id="angelBack" type="button" aria-label="Back">‹ Back</button>
+      <h1>Angel</h1>
+      <button class="barAct" id="angelSettings" type="button">Settings</button>
+    </div>
+
+    <section class="group" aria-labelledby="hAngelStatus">
+      <h3 id="hAngelStatus">Status</h3>
+      <div class="card">
+        <div class="item">
+          <span class="state" id="angelNotifyDot"></span>
+          <div class="grow">
+            <div id="angelFor"></div>
+            <div class="sub" id="angelNotifyState"></div>
+          </div>
+        </div>
+        <div class="row3" id="angelNotifyRow" style="margin-top:10px" hidden>
+          <button id="angelNotify" type="button" class="primary">Turn on notifications</button>
+        </div>
+      </div>
+    </section>
+
     <div class="card" id="angelProtect" hidden>
       <h2>Want protection yourself?</h2>
       <p class="hint" id="angelProtectText"></p>
-      <div class="row3"><button id="angelProtectGo" type="button">Protect me too</button></div>
+      <div class="row3"><button id="angelProtectGo" type="button" class="primary">Protect me too</button></div>
     </div>
-    <div id="angelAlarms"></div>
-    <div class="row"><button class="plain" id="angelRefresh" type="button">Refresh</button><button class="plain" id="angelSettings" type="button">Settings</button></div>
+
+    <section class="group" aria-labelledby="hAngelAlarms">
+      <div class="groupHead">
+        <h3 id="hAngelAlarms">Alarms</h3>
+        <button class="link" id="angelRefresh" type="button">Refresh</button>
+      </div>
+      <div id="angelAlarms"></div>
+    </section>
   </section>
 
   <section id="join" hidden>
