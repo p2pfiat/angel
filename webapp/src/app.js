@@ -34,7 +34,7 @@ const hexToBytes = (h) => Uint8Array.from(h.match(/../g), (x) => parseInt(x, 16)
 
 const KEY = 'w.state'
 /** Shown in Settings, so you can tell whether the phone has the newest version. */
-const APP_VERSION = '28'
+const APP_VERSION = '29'
 /** Phase 1 starter courtesy watcher (Docker watcher open for self-enrolment). */
 const COURTESY_WATCHER = {
   npub: 'npub15pn4an7stpzgk2rj300errwvf6559gc3astxw7mlmy0kmd7rd03s8xpd2n',
@@ -253,6 +253,7 @@ function flushAll() {
     $('angelInvite').classList.toggle('primary', activeCount === 0)
     $('angelTest').hidden = activeCount === 0
     showGuide(s)
+    updateSetupFocus(s)
     updateDot(s)
     for (const a of list) {
       const row = document.createElement('div')
@@ -679,6 +680,7 @@ function flushAll() {
     el.style.color = s.checkedAt && ok === 0 ? 'var(--bad)' : ''
     $('watcherTip').hidden = !(s.watchers.length === 1 && s.watchers[0] === COURTESY_HEX)
     showGuide(s)
+    updateSetupFocus(s)
     updateDot(s)
   }
 
@@ -752,6 +754,7 @@ function flushAll() {
       delete s.protectLink
       delete s.timer
       delete s.topicSynced
+      delete s.showAllSettings
       delete s.checkedAt
     }
     save(s)
@@ -1127,8 +1130,8 @@ function flushAll() {
   })
 
   /** Settings: "iPhone shortcuts" card status and buttons. */
-  function showShortcuts(s) {
-    const visible = !!(s && s.watchers && s.watchers.length) && !isAndroid()
+  function showShortcuts(s, focused = false) {
+    const visible = !!(s && s.watchers && s.watchers.length) && !isAndroid() && !focused
     $('gShortcuts').hidden = !visible
     if (!visible) return
 
@@ -1202,6 +1205,17 @@ function flushAll() {
     }
   }
 
+  /** Focus Settings on server + first angel until the first angel is active (or expanded). */
+  function updateSetupFocus(s) {
+    const ready = !!(s && s.watchers && s.watchers.length)
+    const activeAngels = ((s && s.angels && s.angels.list) || []).filter((a) => a.active).length
+    const focused = ready && !s.showAllSettings && !!(s.angels && activeAngels === 0)
+    for (const id of ['gStatus', 'gAngels']) $(id).hidden = !ready
+    for (const id of ['gTimer', 'gDevices', 'gInvite', 'gOptions']) $(id).hidden = !ready || focused
+    $('moreSettingsCard').hidden = !focused
+    showShortcuts(s, focused)
+  }
+
   function fillSetup(s) {
     const ready = s.watchers.length > 0
     $('npub').textContent = npubOf(hexToBytes(s.sk))
@@ -1227,8 +1241,6 @@ function flushAll() {
       $('courtesyError').textContent = ''
       $('courtesyList').textContent = ''
     }
-    // Without servers only onboarding cards, the link card and Advanced make sense; the link goes in firstRun then.
-    for (const id of ['gStatus', 'gTimer', 'gAngels', 'gDevices', 'gInvite', 'gOptions']) $(id).hidden = !ready
     ;(ready ? $('pasteSlot') : $('firstRun')).append($('pasteCard'))
     $('angelCard').hidden = !(s.angels && s.angels.list.length === 0) && !$('angelCard').dataset.open
     showInvite(s)
@@ -1237,7 +1249,7 @@ function flushAll() {
     showJoined(s)
     showTimer(s)
     showWatchingSummary(s)
-    showShortcuts(s)
+    updateSetupFocus(s)
   }
 
   /** Servers and relays as typed under Advanced. */
@@ -1408,11 +1420,16 @@ function flushAll() {
       try {
         s.topic = parseTopic($('topic').value)
         save(s)
-        showShortcuts(s)
+        updateSetupFocus(s)
         say('Saved')
       } catch (e) {
         say(e.message, { ms: 5000 })
       }
+    }
+    $('showAllSettingsBtn').onclick = () => {
+      s.showAllSettings = true
+      save(s)
+      updateSetupFocus(s)
     }
     // Servers and relays: a typing error here cuts off every alarm, so only on Apply.
     $('applyServers').onclick = () => {

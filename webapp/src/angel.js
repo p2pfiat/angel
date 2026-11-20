@@ -134,6 +134,7 @@ async function join(a, info, secret, name, push, onLine = () => { }) {
 export async function startAngelJoin(link, show, say = () => {}) {
   show('angelJoin')
   $('ajText').textContent = 'Looking up the invite…'
+  $('ajReassure').hidden = true
   $('ajForm').hidden = true
   $('ajInstall').hidden = true
   $('ajError').textContent = ''
@@ -145,8 +146,8 @@ export async function startAngelJoin(link, show, say = () => {}) {
   }
   const by = info.by || 'Someone'
   $('ajText').textContent =
-    `${by} asks you to be one of their angels. If ${by} is ever in trouble, you get an alarm on this phone, with where they are. ` +
-    'You can stop at any time.'
+    `${by} trusts you to be one of their angels. If ${by} ever needs urgent help, you'll get an alert here with their location.`
+  $('ajReassure').hidden = false
   if (iosBrowser()) {
     $('ajInstall').hidden = false
     $('ajCopy').onclick = async () => {
@@ -221,20 +222,29 @@ function isVip() {
   return !!(s && s.watchers && s.watchers.length)
 }
 
-/** "Want protection yourself?": the link the watchers gave when this phone became an angel. */
-function showProtect(a) {
+/** "Want protection yourself?": hidden if already protected or during an active emergency. */
+function showProtect(a, hasActiveAlarm = false) {
+  if (isVip() || hasActiveAlarm) {
+    $('angelProtect').hidden = true
+    return
+  }
   const p = a.protect
-  // Valid for 30 days, used once; gone once this phone is protected.
-  const valid = p && Date.now() / 1000 - p.at < 29 * 86400 && !isVip()
-  $('angelProtect').hidden = !valid
-  if (!valid) return
-  $('angelProtectText').textContent = `${p.by}'s servers can watch over you too: one tap sends an alarm to the angels you choose.`
-  $('angelProtectGo').onclick = () => {
-    const j = parseJoin(p.link)
-    if (!j) return
-    // This app, wherever it runs: the invite screen for that link.
-    location.replace(`${location.pathname}#j=${j.secret}`)
-    location.reload()
+  const hasInvite = !!(p && Date.now() / 1000 - p.at < 29 * 86400)
+  $('angelProtect').hidden = false
+  if (hasInvite) {
+    $('angelProtectText').textContent = `${p.by}'s servers can watch over you too: one tap sends an alarm to the angels you choose.`
+    $('angelProtectGo').textContent = 'Protect me too'
+    $('angelProtectGo').onclick = () => {
+      const j = parseJoin(p.link)
+      if (!j) return
+      // This app, wherever it runs: the invite screen for that link.
+      location.replace(`${location.pathname}#j=${j.secret}`)
+      location.reload()
+    }
+  } else {
+    $('angelProtectText').textContent = 'Free, private safety alerts for yourself in 60 seconds — no account or server setup needed.'
+    $('angelProtectGo').textContent = 'Set up my own safety'
+    $('angelProtectGo').onclick = () => $('angelSettings').click()
   }
 }
 
@@ -291,7 +301,7 @@ export async function showAngel(show, note = '', say = () => {}, { scrollTop = f
     }
     showAngel(show, 'Notifications are on.', say)
   }
-  showProtect(a)
+  showProtect(a, false)
   const box = $('angelAlarms')
   const refreshBtn = $('angelRefresh')
   if (box.dataset.loaded !== '1') box.textContent = 'Loading…'
@@ -332,6 +342,8 @@ export async function showAngel(show, note = '', say = () => {}, { scrollTop = f
   // The same alarm comes from several servers: show it once.
   const seen = new Set()
   msgs = msgs.filter((m) => !seen.has(m.id) && seen.add(m.id))
+  const hasActiveAlarm = msgs.some((m) => (m.kind === 'duress' || m.kind === 'missed') && (a.acked || {})[m.id] !== 'done')
+  showProtect(a, hasActiveAlarm)
   box.textContent = ''
   if (!msgs.length) {
     const empty = document.createElement('div')

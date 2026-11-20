@@ -19,6 +19,9 @@ const root = `${here}/..`
 /** Served path -> local file and content type. */
 const FILES = {
   '/index.html': ['index.html', 'text/html'],
+  '/favicon.svg': ['favicon.svg', 'image/svg+xml'],
+  '/favicon-32.png': ['favicon-32.png', 'image/png'],
+  '/og-preview.png': ['og-preview.png', 'image/png'],
   '/home.js': ['home.js', 'application/javascript'],
   '/app.html': ['app.html', 'text/html'],
   '/app.js': ['app.js', 'application/javascript'],
