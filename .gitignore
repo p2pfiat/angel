@@ -1,0 +1,40 @@
+# --- Secrets & personal config: never commit ---
+# Real configuration lives outside the repo (e.g. %LOCALAPPDATA%\<app>\ or ~/.config/<app>/).
+# Only *.example files belong in git.
+*.nsec
+*.key
+*.pem
+keys/
+secrets/
+.env
+.env.*
+!.env.example
+config.toml
+config.json
+*.local.*
+!*.example.*
+
+# --- Build output ---
+target/
+dist/
+build/
+node_modules/
+*.exe
+*.msi
+
+# --- Logs & runtime data ---
+*.log
+*.sqlite
+*.db
+data/
+
+# --- OS / editor noise ---
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+# Web app build tooling
+webapp/node_modules/
+webapp/dist/

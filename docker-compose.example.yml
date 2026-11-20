@@ -1,0 +1,7 @@
+# Copy to docker-compose.yml next to a ./data folder holding config.toml.
+services:
+  watcher:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./data:/data

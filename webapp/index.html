@@ -1,0 +1,1528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Angel — Decentralized Personal Safety</title>
+<script>
+(function () {
+  var h = location.hash || '';
+  var isAppHash = /^#(?:[jadw]=|angel$|.*join=1)/.test(h);
+  var standalone = !!navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  var forceHome = /[?&]home(?:=|&|$)/.test(location.search || '');
+  var configured = false;
+  if (!forceHome && !isAppHash && !standalone) {
+    try {
+      var s = JSON.parse(localStorage.getItem('w.state'));
+      if (s && s.watchers && s.watchers.length) configured = true;
+      var a = JSON.parse(localStorage.getItem('w.angel'));
+      if (a && a.vips && Object.keys(a.vips).length) configured = true;
+    } catch (e) {}
+  }
+  if (isAppHash || (!forceHome && (standalone || configured))) {
+    location.replace('./app.html' + h);
+  }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1A73E8;
+    --blue-bright: #4285F4;
+    --blue-soft: #E8F0FE;
+    --red: #EA4335;
+    --red-ink: #C5221F;
+    --red-soft: #FCE8E6;
+    --yellow: #FBBC04;
+    --yellow-deep: #F9AB00;
+    --yellow-ink: #9A5B00;
+    --yellow-soft: #FEF7E0;
+    --green: #34A853;
+    --green-ink: #137333;
+    --green-soft: #E6F4EA;
+    --bg: #FFFFFF;
+    --surface: #F8F9FA;
+    --border: #DADCE0;
+    --ink: #202124;
+    --muted: #5F6368;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --shadow-sm: 0 1px 2px rgba(60, 64, 67, 0.12), 0 1px 3px 1px rgba(60, 64, 67, 0.06);
+    --shadow-md: 0 4px 16px rgba(60, 64, 67, 0.10), 0 1px 4px rgba(60, 64, 67, 0.06);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, .brand {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  a { color: inherit; }
+  code, pre {
+    font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .wrap {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Sticky glass navbar */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(218, 220, 224, 0.7);
+  }
+  .navInner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    height: 68px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 21px;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .navLinks {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .navLinks a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .navLinks a:hover { color: var(--blue); }
+
+  /* Pill buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 12px 22px;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btnPrimary {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(26, 115, 232, 0.28);
+  }
+  .btnPrimary:hover {
+    background: #1765cc;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.30);
+  }
+  .btnOutline {
+    background: #fff;
+    color: var(--blue);
+    border-color: var(--border);
+  }
+  .btnOutline:hover {
+    background: var(--blue-soft);
+    border-color: #d2e3fc;
+  }
+  .btnSm {
+    padding: 9px 16px;
+    font-size: 13px;
+  }
+  .btnGreen {
+    background: var(--green-soft);
+    color: var(--green-ink);
+    border-color: #ceead6;
+  }
+  .btnGreen:hover, .btnGreen.active {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+  .btnRed {
+    background: var(--red-soft);
+    color: var(--red-ink);
+    border-color: #fad2cf;
+  }
+  .btnRed:hover, .btnRed.active {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+  }
+
+  /* Hero */
+  .hero {
+    padding: 56px 0 72px;
+    background:
+      radial-gradient(640px 360px at 84% 12%, rgba(66, 133, 244, 0.08), transparent 70%),
+      radial-gradient(500px 320px at 14% 80%, rgba(52, 168, 83, 0.06), transparent 70%),
+      var(--bg);
+  }
+  .heroGrid {
+    display: grid;
+    grid-template-columns: 1.02fr 1fr;
+    gap: 44px;
+    align-items: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .badgeDots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .badgeDots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 4.4vw, 52px);
+    line-height: 1.12;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+  .heroLead {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 500px;
+    margin: 0 0 28px;
+  }
+  .heroActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .heroMeta {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .heroMeta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Interactive 3D canvas card */
+  .stageCard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: var(--shadow-md);
+  }
+  .stageHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 6px 12px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .stageStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .statusDot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--blue-bright);
+    transition: background-color 0.2s;
+  }
+  .canvasBox {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    height: 330px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .canvasBox:active { cursor: grabbing; }
+  .canvasBox svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .stageRight {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stageToggle {
+    background: #fff;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  }
+  .stageToggle:hover {
+    color: var(--ink);
+    border-color: #bdc1c6;
+  }
+  .dragHint {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.85);
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    pointer-events: none;
+  }
+  .stageControls {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .simButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .legend i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Sections */
+  section.band {
+    padding: 76px 0;
+  }
+  section.alt {
+    background: var(--surface);
+    border-top: 1px solid #eceff1;
+    border-bottom: 1px solid #eceff1;
+  }
+  .secHead {
+    max-width: 640px;
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .secHead h2 {
+    font-size: clamp(26px, 3.2vw, 36px);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .secHead p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 17px;
+  }
+
+  /* Use cases 2x2 */
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .useIllo {
+    border-radius: var(--radius-md);
+    padding: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 148px;
+  }
+  .useIllo svg {
+    width: 100%;
+    height: 100%;
+    max-width: 280px;
+  }
+  .bg-yellow { background: var(--yellow-soft); }
+  .bg-red { background: var(--red-soft); }
+  .bg-blue { background: var(--blue-soft); }
+  .bg-green { background: var(--green-soft); }
+  .useTag {
+    display: inline-block;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .tag-yellow { background: var(--yellow-soft); color: var(--yellow-ink); }
+  .tag-red { background: var(--red-soft); color: var(--red-ink); }
+  .tag-blue { background: var(--blue-soft); color: var(--blue); }
+  .tag-green { background: var(--green-soft); color: var(--green-ink); }
+  .card h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  /* How it works */
+  .flowDiagram {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+  }
+  .flowDiagram svg {
+    display: block;
+    width: 100%;
+    min-width: 640px;
+    height: auto;
+  }
+  .grid4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .stepCard {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stepNum {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .stepCard h3 {
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  .stepCard p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* Download & Install */
+  .grid3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    align-items: stretch;
+  }
+  .dlCard {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  .dlIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .dlCard h3 {
+    font-size: 21px;
+    margin-bottom: 6px;
+  }
+  .dlSub {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .dlBody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .dlBody p {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--muted);
+  }
+  .miniSteps {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+  }
+  .miniSteps strong {
+    display: block;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .miniSteps div + div {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e8eaed;
+  }
+  .qrBox {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .qrSvg {
+    width: 112px;
+    height: 112px;
+    flex: none;
+  }
+  .qrSvg svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    border: 1px solid #e8eaed;
+    background: #fff;
+  }
+  .qrBox strong {
+    display: block;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .qrBox span {
+    display: block;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .starterNote {
+    font-size: 13px !important;
+    background: var(--blue-soft);
+    color: #174EA6 !important;
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .codeWrap {
+    position: relative;
+    background: #202124;
+    color: #e8eaed;
+    border-radius: 14px;
+    padding: 14px 14px 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+  .codeWrap pre {
+    margin: 0;
+    white-space: pre;
+    padding-right: 60px;
+  }
+  .copyBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .copyBtn:hover { background: rgba(255, 255, 255, 0.24); }
+  .dlFoot {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Privacy */
+  .privCard {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .privIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .privCard h3 {
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  .privCard p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* Footer */
+  footer {
+    padding: 40px 0 48px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .footInner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .footLinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-weight: 500;
+  }
+  .footLinks a {
+    text-decoration: none;
+    color: var(--blue);
+  }
+  .footLinks a:hover { text-decoration: underline; }
+  .footNote {
+    max-width: 540px;
+    margin: 8px 0 0;
+    font-size: 13px;
+  }
+
+  @media (max-width: 960px) {
+    .heroGrid, .grid3 { grid-template-columns: 1fr; }
+    .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 680px) {
+    .navLinks { display: none; }
+    .grid2, .grid4 { grid-template-columns: 1fr; }
+    .hero { padding: 36px 0 52px; }
+    section.band { padding: 56px 0; }
+    .canvasBox { height: 280px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .btn, .card { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap navInner">
+    <a class="brand" href="#top" aria-label="Angel home">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <ellipse cx="16" cy="8.5" rx="9" ry="3.2" stroke="#FBBC04" stroke-width="2.5"/>
+        <circle cx="16" cy="19" r="8.5" stroke="#DADCE0" stroke-width="1.5" fill="#F8F9FA"/>
+        <circle cx="12.5" cy="17.5" r="2.6" fill="#4285F4"/>
+        <circle cx="19.5" cy="17.5" r="2.6" fill="#34A853"/>
+        <circle cx="16" cy="22.5" r="2.6" fill="#EA4335"/>
+      </svg>
+      <span>Angel</span>
+    </a>
+    <nav class="navLinks" aria-label="Primary">
+      <a href="#use-cases">Use cases</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#download">Download</a>
+      <a href="#privacy">Privacy</a>
+    </nav>
+    <a class="btn btnPrimary btnSm" href="./app.html">Open Web App</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap heroGrid">
+      <div>
+        <div class="badge">
+          <span class="badgeDots" aria-hidden="true">
+            <span style="background:#4285F4"></span>
+            <span style="background:#EA4335"></span>
+            <span style="background:#FBBC04"></span>
+            <span style="background:#34A853"></span>
+          </span>
+          Decentralized Personal Safety
+        </div>
+        <h1>Silent help from people you trust — in minutes.</h1>
+        <p class="heroLead">
+          No central server, no constant tracking. If you're in danger and can't call for help, independent watchers alert your trusted angels automatically.
+        </p>
+        <div class="heroActions">
+          <a class="btn btnPrimary" href="#download-webapp">Install Web App</a>
+          <a class="btn btnOutline" href="#download">Download Desktop &amp; Docker</a>
+        </div>
+        <div class="heroMeta">
+          <span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34A853" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Works on iPhone, Android &amp; Windows
+          </span>
+          <span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Encrypted end-to-end
+          </span>
+          <span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F9AB00" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            No open ports required
+          </span>
+        </div>
+      </div>
+
+      <div class="stageCard" aria-label="Interactive conceptual 3D network visualization">
+        <div class="stageHead">
+          <span class="stageStatus">
+            <span class="statusDot" id="simDot"></span>
+            <span id="simStatus">Watchers active — holding no alarm</span>
+          </span>
+          <span class="stageRight">
+            <span>3D Concept View</span>
+            <button type="button" class="stageToggle" id="simToggle" aria-pressed="false">Pause</button>
+          </span>
+        </div>
+        <div class="canvasBox" id="canvasBox">
+          <svg id="netSvg" viewBox="0 0 520 330" role="img" aria-label="3D visualization of your device, Nostr relays, independent watchers, and angels">
+            <g id="netRings">
+              <ellipse cx="260" cy="155" rx="80" ry="31" fill="none" stroke="rgba(218,220,224,0.85)" stroke-width="1.2"/>
+              <ellipse cx="260" cy="155" rx="140" ry="54" fill="none" stroke="rgba(218,220,224,0.85)" stroke-width="1.2"/>
+              <ellipse cx="260" cy="155" rx="200" ry="78" fill="none" stroke="rgba(218,220,224,0.85)" stroke-width="1.2"/>
+            </g>
+            <g id="netEdges">
+              <line x1="260" y1="155" x2="205" y2="132" stroke="rgba(66,133,244,0.28)" stroke-width="1.6"/>
+              <line x1="260" y1="155" x2="320" y2="174" stroke="rgba(66,133,244,0.28)" stroke-width="1.6"/>
+              <line x1="260" y1="155" x2="244" y2="186" stroke="rgba(66,133,244,0.28)" stroke-width="1.6"/>
+              <line x1="205" y1="132" x2="136" y2="108" stroke="rgba(66,133,244,0.28)" stroke-width="1.6"/>
+              <line x1="320" y1="174" x2="386" y2="202" stroke="rgba(66,133,244,0.28)" stroke-width="1.6"/>
+              <line x1="136" y1="108" x2="78" y2="88" stroke="rgba(66,133,244,0.28)" stroke-width="1.6"/>
+              <line x1="386" y1="202" x2="444" y2="228" stroke="rgba(66,133,244,0.28)" stroke-width="1.6"/>
+              <line x1="386" y1="202" x2="404" y2="96" stroke="rgba(66,133,244,0.28)" stroke-width="1.6"/>
+            </g>
+            <g id="netPulses"></g>
+            <g id="netNodes">
+              <g><circle cx="260" cy="155" r="20" fill="#fff"/><circle cx="260" cy="155" r="16" fill="#202124"/><text x="260" y="188" text-anchor="middle" font-size="13" font-weight="600" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">Your Device</text></g>
+              <g><circle cx="205" cy="132" r="13" fill="#fff"/><circle cx="205" cy="132" r="9.5" fill="#4285F4"/><text x="205" y="159" text-anchor="middle" font-size="13" font-weight="600" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">Relay</text></g>
+              <g><circle cx="320" cy="174" r="13" fill="#fff"/><circle cx="320" cy="174" r="9.5" fill="#4285F4"/><text x="320" y="201" text-anchor="middle" font-size="13" font-weight="600" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">Relay</text></g>
+              <g><circle cx="136" cy="108" r="15" fill="#fff"/><circle cx="136" cy="108" r="11.5" fill="#FBBC04"/><text x="136" y="137" text-anchor="middle" font-size="13" font-weight="600" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">Watcher</text></g>
+              <g><circle cx="386" cy="202" r="15" fill="#fff"/><circle cx="386" cy="202" r="11.5" fill="#FBBC04"/><text x="386" y="231" text-anchor="middle" font-size="13" font-weight="600" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">Watcher</text></g>
+              <g><circle cx="78" cy="88" r="15" fill="#fff"/><circle cx="78" cy="88" r="11.5" fill="#34A853"/><text x="78" y="117" text-anchor="middle" font-size="13" font-weight="600" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">Angel</text></g>
+              <g><circle cx="444" cy="228" r="15" fill="#fff"/><circle cx="444" cy="228" r="11.5" fill="#34A853"/><text x="444" y="257" text-anchor="middle" font-size="13" font-weight="600" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">Angel</text></g>
+              <g><circle cx="404" cy="96" r="15" fill="#fff"/><circle cx="404" cy="96" r="11.5" fill="#34A853"/><text x="404" y="125" text-anchor="middle" font-size="13" font-weight="600" font-family="Plus Jakarta Sans, sans-serif" fill="#3C4043" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">Angel</text></g>
+            </g>
+          </svg>
+          <span class="dragHint">Drag to tilt · Scroll or pinch to zoom</span>
+        </div>
+        <div class="stageControls">
+          <div class="simButtons">
+            <button type="button" class="btn btnSm btnGreen" id="simOk">Safe Check-in</button>
+            <button type="button" class="btn btnSm btnRed" id="simAlarm">Trigger Silent Alarm</button>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span><i style="background:#202124"></i>Device</span>
+            <span><i style="background:#4285F4"></i>Relays</span>
+            <span><i style="background:#FBBC04"></i>Watchers</span>
+            <span><i style="background:#34A853"></i>Angels</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="use-cases" class="band alt">
+    <div class="wrap">
+      <div class="secHead">
+        <div class="eyebrow">Use Cases</div>
+        <h2>Simple protection for real-life moments</h2>
+        <p>Every situation uses the same quiet building blocks — choose only what fits your day.</p>
+      </div>
+
+      <div class="grid2">
+        <article class="card">
+          <div class="useIllo bg-yellow" aria-hidden="true">
+            <svg viewBox="0 0 280 120" fill="none">
+              <path d="M24 92 C78 92, 92 42, 146 42 C194 42, 206 78, 256 78" stroke="#F9AB00" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 6"/>
+              <circle cx="38" cy="92" r="10" fill="#FBBC04"/>
+              <circle cx="146" cy="42" r="24" fill="#FFFFFF" stroke="#F9AB00" stroke-width="3"/>
+              <path d="M146 30 V42 L154 47" stroke="#9A5B00" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="220" y="54" width="38" height="36" rx="8" fill="#FFFFFF" stroke="#34A853" stroke-width="3"/>
+              <path d="M232 72 L237 77 L247 67" stroke="#34A853" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="useTag tag-yellow">Walk-home timer</span>
+          <h3>Walking Home Safe</h3>
+          <p>Start a 15, 30, or 60-minute walk-home timer in one tap. Tap <strong>Done</strong> when you're safe — if you don't, your angels get an alarm with your location, even if your phone is taken or turned off.</p>
+        </article>
+
+        <article class="card">
+          <div class="useIllo bg-red" aria-hidden="true">
+            <svg viewBox="0 0 280 120" fill="none">
+              <rect x="112" y="18" width="56" height="84" rx="12" fill="#FFFFFF" stroke="#EA4335" stroke-width="3"/>
+              <rect x="128" y="25" width="24" height="4" rx="2" fill="#FAD2CF"/>
+              <circle cx="80" cy="60" r="10" stroke="#EA4335" stroke-width="2.5" stroke-opacity="0.45"/>
+              <circle cx="80" cy="60" r="20" stroke="#EA4335" stroke-width="2" stroke-opacity="0.25"/>
+              <circle cx="80" cy="60" r="4" fill="#EA4335"/>
+              <path d="M188 46 C198 54, 198 66, 188 74" stroke="#EA4335" stroke-width="3" stroke-linecap="round"/>
+              <path d="M201 38 C215 50, 215 70, 201 82" stroke="#EA4335" stroke-width="3" stroke-linecap="round" stroke-opacity="0.65"/>
+              <path d="M214 30 C232 46, 232 74, 214 90" stroke="#EA4335" stroke-width="3" stroke-linecap="round" stroke-opacity="0.35"/>
+              <circle cx="140" cy="62" r="10" fill="#FCE8E6" stroke="#EA4335" stroke-width="2.5"/>
+            </svg>
+          </div>
+          <span class="useTag tag-red">Immediate duress</span>
+          <h3>Hidden Emergency Gesture</h3>
+          <p>In immediate danger on iPhone or Android? Holding the quiet <strong>Sync</strong> button sends an immediate encrypted alert with your location — and on iPhone you can also trigger it with a secret gesture or shortcut of your choice.</p>
+        </article>
+
+        <article class="card">
+          <div class="useIllo bg-blue" aria-hidden="true">
+            <svg viewBox="0 0 280 120" fill="none">
+              <rect x="52" y="22" width="54" height="76" rx="10" fill="#FFFFFF" stroke="#1A73E8" stroke-width="3"/>
+              <rect x="65" y="42" width="28" height="22" rx="4" fill="#E8F0FE" stroke="#1A73E8" stroke-width="2"/>
+              <path d="M72 42 V37 A7 7 0 0 1 86 37 V42" stroke="#1A73E8" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M118 60 H156" stroke="#1A73E8" stroke-width="3" stroke-dasharray="5 5" stroke-linecap="round"/>
+              <circle cx="196" cy="60" r="28" fill="#FFFFFF" stroke="#1A73E8" stroke-width="3"/>
+              <path d="M196 44 V60 L207 67" stroke="#1A73E8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="222" cy="36" r="10" fill="#34A853"/>
+              <path d="M218 36 L221 39 L227 33" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="useTag tag-blue">Forced access</span>
+          <h3>Forced Phone Unlock</h3>
+          <p>Forced to unlock your phone? You can configure <strong>Sync</strong> on iPhone or Android to send automatically when opened, and on iPhone combine it with Shortcuts when opening a banking app — cancelled only by your own secret check-in gesture.</p>
+        </article>
+
+        <article class="card">
+          <div class="useIllo bg-green" aria-hidden="true">
+            <svg viewBox="0 0 280 120" fill="none">
+              <rect x="44" y="24" width="96" height="62" rx="8" fill="#FFFFFF" stroke="#34A853" stroke-width="3"/>
+              <path d="M32 92 H152" stroke="#34A853" stroke-width="4" stroke-linecap="round"/>
+              <rect x="70" y="43" width="44" height="24" rx="5" fill="#E6F4EA" stroke="#34A853" stroke-width="2"/>
+              <text x="92" y="59" text-anchor="middle" fill="#137333" font-size="11" font-family="Roboto Mono, monospace" font-weight="600">KEYS</text>
+              <path d="M156 56 C176 56, 184 56, 200 56" stroke="#34A853" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="222" cy="40" r="14" fill="#FFFFFF" stroke="#4285F4" stroke-width="3"/>
+              <circle cx="222" cy="76" r="14" fill="#FFFFFF" stroke="#FBBC04" stroke-width="3"/>
+              <circle cx="222" cy="40" r="5" fill="#4285F4"/>
+              <circle cx="222" cy="76" r="5" fill="#FBBC04"/>
+            </svg>
+          </div>
+          <span class="useTag tag-green">Desktop check-in</span>
+          <h3>Coerced Laptop Sign-In</h3>
+          <p>Every time your Windows PC unlocks, a silent background agent starts a short timer. Press your secret hotkey to check in; if someone forces access, watchers in other homes raise the alarm.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="how-it-works" class="band">
+    <div class="wrap">
+      <div class="secHead">
+        <div class="eyebrow">How It Works</div>
+        <h2>Resilient by design — zero central servers</h2>
+        <p>Your devices and your friends' always-on watchers meet at public encrypted relays. As long as one watcher is running, your alarm gets out.</p>
+      </div>
+
+      <div class="flowDiagram" aria-hidden="true">
+        <svg viewBox="0 0 920 150" fill="none">
+          <rect x="14" y="25" width="186" height="100" rx="18" fill="#FCE8E6" stroke="#FAD2CF" stroke-width="2"/>
+          <text x="107" y="66" text-anchor="middle" fill="#202124" font-family="Plus Jakarta Sans, sans-serif" font-size="16" font-weight="700">1. Trigger</text>
+          <text x="107" y="90" text-anchor="middle" fill="#5F6368" font-family="Roboto, sans-serif" font-size="13">Phone or Windows PC</text>
+
+          <path d="M210 75 H252" stroke="#1A73E8" stroke-width="3" stroke-linecap="round"/>
+          <polygon points="258,75 248,69 248,81" fill="#1A73E8"/>
+
+          <rect x="262" y="25" width="194" height="100" rx="18" fill="#E8F0FE" stroke="#D2E3FC" stroke-width="2"/>
+          <text x="359" y="66" text-anchor="middle" fill="#202124" font-family="Plus Jakarta Sans, sans-serif" font-size="16" font-weight="700">2. Encrypted Relays</text>
+          <text x="359" y="90" text-anchor="middle" fill="#5F6368" font-family="Roboto, sans-serif" font-size="13">Nostr (no central server)</text>
+
+          <path d="M466 75 H508" stroke="#F9AB00" stroke-width="3" stroke-linecap="round"/>
+          <polygon points="514,75 504,69 504,81" fill="#F9AB00"/>
+
+          <rect x="518" y="25" width="194" height="100" rx="18" fill="#FEF7E0" stroke="#FEEFC3" stroke-width="2"/>
+          <text x="615" y="66" text-anchor="middle" fill="#202124" font-family="Plus Jakarta Sans, sans-serif" font-size="16" font-weight="700">3. Watchers</text>
+          <text x="615" y="90" text-anchor="middle" fill="#5F6368" font-family="Roboto, sans-serif" font-size="13">Outbound-only clocks</text>
+
+          <path d="M722 75 H764" stroke="#34A853" stroke-width="3" stroke-linecap="round"/>
+          <polygon points="770,75 760,69 760,81" fill="#34A853"/>
+
+          <rect x="774" y="25" width="132" height="100" rx="18" fill="#E6F4EA" stroke="#CEEAD6" stroke-width="2"/>
+          <text x="840" y="66" text-anchor="middle" fill="#202124" font-family="Plus Jakarta Sans, sans-serif" font-size="16" font-weight="700">4. Angels</text>
+          <text x="840" y="90" text-anchor="middle" fill="#5F6368" font-family="Roboto, sans-serif" font-size="13">Push &amp; Telegram</text>
+        </svg>
+      </div>
+
+      <div class="grid4">
+        <div class="stepCard">
+          <span class="stepNum" style="background:var(--red-soft);color:var(--red-ink)">1</span>
+          <h3>Trigger</h3>
+          <p>Started from your phone (Sync timer, secret gesture, automation) or Windows PC unlock.</p>
+        </div>
+        <div class="stepCard">
+          <span class="stepNum" style="background:var(--blue-soft);color:var(--blue)">2</span>
+          <h3>Encrypted Relays</h3>
+          <p>Messages travel wrapped through multiple public Nostr relays so no single host can block them.</p>
+        </div>
+        <div class="stepCard">
+          <span class="stepNum" style="background:var(--yellow-soft);color:var(--yellow-ink)">3</span>
+          <h3>Independent Watchers</h3>
+          <p>Always-on Docker or PC watchers in friends' homes keep the clocks and escalate only if needed.</p>
+        </div>
+        <div class="stepCard">
+          <span class="stepNum" style="background:var(--green-soft);color:var(--green-ink)">4</span>
+          <h3>Your Angels</h3>
+          <p>Trusted contacts receive Web Push and Telegram alerts with one-tap <em>I am calling</em> and <em>Resolved</em> actions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download" class="band alt">
+    <div class="wrap">
+      <div class="secHead">
+        <div class="eyebrow">Download &amp; Install</div>
+        <h2>Get protected — or help protect someone</h2>
+        <p>Install the discreet mobile web app on your phone, protect your Windows laptop, or run a watcher for your circle.</p>
+      </div>
+
+      <div class="grid3">
+        <div class="dlCard" id="download-webapp">
+          <div class="dlIcon bg-blue" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </div>
+          <h3>Phone Web App ("Sync")</h3>
+          <div class="dlSub">iPhone (iOS 16.4+) &amp; Android · No app store</div>
+          <div class="dlBody">
+            <p>Deliberately named <strong>Sync</strong> on your home screen. Works on both <strong>iPhone</strong> and <strong>Android</strong> as your safety app (timer, silent hold button, test alerts) and to receive Web Push alarms as someone's angel.</p>
+            <div class="qrBox" id="homeQrBox">
+              <div id="homeAppQr" class="qrSvg" role="img" aria-label="QR code to open Sync web app on your phone"></div>
+              <div>
+                <strong>Scan with your phone</strong>
+                <span>Sync runs best on your phone's home screen. Point your iPhone or Android camera here to install it.</span>
+              </div>
+            </div>
+            <div class="miniSteps">
+              <div id="stepsIos">
+                <strong>On iPhone (Safari)</strong>
+                1. Open Sync in Safari and tap <strong>Share</strong>.<br>
+                2. Tap <strong>Add to Home Screen</strong>, then open <strong>Sync</strong> from your Home Screen.
+              </div>
+              <div id="stepsAndroid">
+                <strong>On Android (Chrome)</strong>
+                1. Open Sync in Chrome.<br>
+                2. Tap <strong>Install app</strong> (or menu <strong>⋮</strong> → <strong>Add to Home screen</strong>).
+              </div>
+            </div>
+            <p class="starterNote"><strong>Instant start:</strong> Enroll with our Phase 1 <strong>courtesy starter server</strong> in one tap, invite your angels, then add your own Windows or Docker watcher later for full independence.</p>
+          </div>
+          <div class="dlFoot">
+            <a class="btn btnPrimary" id="homeOpenApp" href="./app.html">Open &amp; Install Web App</a>
+          </div>
+        </div>
+
+        <div class="dlCard">
+          <div class="dlIcon bg-green" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34A853" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="12" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/>
+            </svg>
+          </div>
+          <h3>Windows Agent &amp; Watcher</h3>
+          <div class="dlSub">warn-agent.exe · Silent PC agent + optional watcher</div>
+          <div class="dlBody">
+            <p>Runs invisibly in the background on Windows. Detects every logon and unlock, checks your secret hotkey, and can run a built-in watcher (<code>[watcher]</code>) for yourself or to back up the courtesy server.</p>
+            <div class="codeWrap">
+              <button type="button" class="copyBtn" data-copy="winCode">Copy</button>
+              <pre id="winCode">.\warn-agent.exe init --device laptop
+.\warn-agent.exe run</pre>
+            </div>
+          </div>
+          <div class="dlFoot">
+            <a class="btn btnPrimary" href="https://github.com/p2pfiat/angel/releases/latest" target="_blank" rel="noopener">Download for Windows</a>
+          </div>
+        </div>
+
+        <div class="dlCard">
+          <div class="dlIcon bg-yellow" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A5B00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="7" rx="2"/><rect x="2" y="13" width="20" height="7" rx="2"/><line x1="6" y1="7.5" x2="6.01" y2="7.5"/><line x1="6" y1="16.5" x2="6.01" y2="16.5"/>
+            </svg>
+          </div>
+          <h3>Docker Watcher</h3>
+          <div class="dlSub">warn-watcher · Home server / NAS / Mini-PC</div>
+          <div class="dlBody">
+            <p>Run an always-on watcher in another household. Makes outbound connections only — no open ports, reverse proxies, or port forwarding needed.</p>
+            <div class="codeWrap">
+              <button type="button" class="copyBtn" data-copy="dockerCode">Copy</button>
+              <pre id="dockerCode">services:
+  watcher:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+
+# Start with:
+docker compose up -d --build</pre>
+            </div>
+          </div>
+          <div class="dlFoot">
+            <a class="btn btnOutline" href="https://github.com/p2pfiat/angel" target="_blank" rel="noopener">View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy" class="band">
+    <div class="wrap">
+      <div class="secHead">
+        <div class="eyebrow">Privacy &amp; Trust</div>
+        <h2>Built for safety without surveillance</h2>
+        <p>Unlike family-locator apps, Angel never turns safety into constant tracking.</p>
+      </div>
+
+      <div class="grid4">
+        <div class="privCard">
+          <div class="privIcon bg-blue" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="10.5" y1="7.6" x2="6.5" y2="16.4"/><line x1="13.5" y1="7.6" x2="17.5" y2="16.4"/><line x1="8" y1="19" x2="16" y2="19"/>
+            </svg>
+          </div>
+          <h3>No central server</h3>
+          <p>Every message goes through replaceable relays to your own circle's watchers — no company can shut it down.</p>
+        </div>
+        <div class="privCard">
+          <div class="privIcon bg-green" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34A853" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <h3>Not a location tracker</h3>
+          <p>Nobody can follow where you are. Your position is included only when an alarm actually fires.</p>
+        </div>
+        <div class="privCard">
+          <div class="privIcon bg-yellow" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A5B00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h3>End-to-end encrypted</h3>
+          <p>Nostr NIP-59 gift wraps and RFC 8291 Web Push keep relays, Apple, and Google blind to your alerts.</p>
+        </div>
+        <div class="privCard">
+          <div class="privIcon bg-red" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA4335" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </div>
+          <h3>Discreet by design</h3>
+          <p>Plain <em>Sync</em> icon on your phone and a silent Windows agent with no popups or default hotkeys.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap footInner">
+    <div>
+      <strong style="color:var(--ink);font-family:'Plus Jakarta Sans',sans-serif">Angel</strong> — Open-source decentralized duress &amp; check-in network.
+      <p class="footNote">Complements and never replaces official emergency services. Always call your local emergency number first when it is safe to do so.</p>
+    </div>
+    <div class="footLinks">
+      <a href="./app.html">Launch Sync Web App</a>
+      <a href="https://github.com/p2pfiat/angel" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/p2pfiat/angel/releases/latest" target="_blank" rel="noopener">Releases</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var copyButtons = document.querySelectorAll('[data-copy]');
+  for (var i = 0; i < copyButtons.length; i++) {
+    copyButtons[i].addEventListener('click', function () {
+      var btn = this;
+      var el = document.getElementById(btn.getAttribute('data-copy'));
+      if (!el) return;
+      var text = el.textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = 'Copied';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1800);
+        }).catch(function () {
+          btn.textContent = 'Copy manually';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1800);
+        });
+      }
+    });
+  }
+
+  var svg = document.getElementById('netSvg');
+  var box = document.getElementById('canvasBox');
+  var ringsG = document.getElementById('netRings');
+  var edgesG = document.getElementById('netEdges');
+  var pulsesG = document.getElementById('netPulses');
+  var nodesG = document.getElementById('netNodes');
+  if (!svg || !box || !ringsG || !edgesG || !pulsesG || !nodesG || !document.createElementNS) return;
+
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var W = 520;
+  var H = 330;
+  var simStatus = document.getElementById('simStatus');
+  var simDot = document.getElementById('simDot');
+  var btnOk = document.getElementById('simOk');
+  var btnAlarm = document.getElementById('simAlarm');
+  var btnToggle = document.getElementById('simToggle');
+
+  function el(tag, attrs) {
+    var node = document.createElementNS(SVG_NS, tag);
+    if (attrs) {
+      for (var k in attrs) node.setAttribute(k, attrs[k]);
+    }
+    return node;
+  }
+
+  var paused = false;
+  var mode = 'idle'; // 'idle' | 'ok' | 'alarm'
+  var modeStart = 0;
+  var yaw = 0.45;
+  var pitch = 0.40;
+  var zoom = 1;
+  var targetYaw = 0.45;
+  var targetPitch = 0.40;
+  var targetZoom = 1;
+  var pointers = Object.create(null);
+  var pointerCount = 0;
+  var lastPinchDist = 0;
+  var simTime = 0;
+  var lastStamp = null;
+  var rafId = 0;
+
+  var nodes = [
+    { id: 'device', label: 'Your Device', ring: 0, angle: 0, y: 0, color: '#202124', r: 20 },
+    { id: 'r1', label: 'Relay', ring: 1, angle: 0.4, y: 0.14, color: '#4285F4', r: 12.5 },
+    { id: 'r2', label: 'Relay', ring: 1, angle: 2.5, y: -0.12, color: '#4285F4', r: 12.5 },
+    { id: 'r3', label: 'Relay', ring: 1, angle: 4.6, y: 0.08, color: '#4285F4', r: 12.5 },
+    { id: 'w1', label: 'Watcher', ring: 2, angle: 1.1, y: 0.22, color: '#FBBC04', r: 15 },
+    { id: 'w2', label: 'Watcher', ring: 2, angle: 4.1, y: -0.20, color: '#FBBC04', r: 15 },
+    { id: 'a1', label: 'Angel', ring: 3, angle: 0.2, y: -0.10, color: '#34A853', r: 15 },
+    { id: 'a2', label: 'Angel', ring: 3, angle: 2.3, y: 0.20, color: '#34A853', r: 15 },
+    { id: 'a3', label: 'Angel', ring: 3, angle: 4.3, y: -0.15, color: '#34A853', r: 15 }
+  ];
+
+  var edges = [
+    [0, 1], [0, 2], [0, 3],
+    [1, 4], [2, 4], [2, 5], [3, 5],
+    [4, 6], [4, 7], [5, 7], [5, 8]
+  ];
+
+  ringsG.textContent = '';
+  edgesG.textContent = '';
+  pulsesG.textContent = '';
+  nodesG.textContent = '';
+
+  var ringEls = [];
+  for (var rIdx = 0; rIdx < 3; rIdx++) {
+    var rp = el('path', { fill: 'none', stroke: 'rgba(218, 220, 224, 0.9)', 'stroke-width': '1.2' });
+    ringsG.appendChild(rp);
+    ringEls.push(rp);
+  }
+
+  var edgeEls = [];
+  var pulseEls = [];
+  for (var eIdx = 0; eIdx < edges.length; eIdx++) {
+    var ln = el('line', { stroke: 'rgba(66, 133, 244, 0.28)', 'stroke-width': '1.6' });
+    edgesG.appendChild(ln);
+    edgeEls.push(ln);
+    var pc = el('circle', { r: '3.8', fill: '#4285F4', display: 'none' });
+    pulsesG.appendChild(pc);
+    pulseEls.push(pc);
+  }
+
+  var nodeItems = [];
+  for (var nIdx = 0; nIdx < nodes.length; nIdx++) {
+    var nd = nodes[nIdx];
+    var g = el('g');
+    var halo = el('circle', { fill: 'rgba(234, 67, 53, 0.2)', display: 'none' });
+    var outer = el('circle', { fill: '#FFFFFF' });
+    var core = el('circle', { fill: nd.color });
+    var txt = el('text', {
+      'text-anchor': 'middle',
+      fill: '#3C4043',
+      'font-size': '13.5',
+      'font-weight': '600',
+      'font-family': 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif',
+      stroke: '#FFFFFF',
+      'stroke-width': '3.5',
+      'stroke-linejoin': 'round',
+      'paint-order': 'stroke'
+    });
+    txt.textContent = nd.label;
+    g.appendChild(halo);
+    g.appendChild(outer);
+    g.appendChild(core);
+    g.appendChild(txt);
+    nodesG.appendChild(g);
+    nodeItems.push({ idx: nIdx, node: nd, g: g, halo: halo, outer: outer, core: core, txt: txt });
+  }
+  var lastOrder = '';
+
+  function getClock(stamp) {
+    if (typeof stamp === 'number') return stamp;
+    return window.performance && performance.now ? performance.now() : Date.now();
+  }
+
+  function project(x, y, z) {
+    var cy = Math.cos(yaw), sy = Math.sin(yaw);
+    var cp = Math.cos(pitch), sp = Math.sin(pitch);
+    var x1 = x * cy - z * sy;
+    var z1 = x * sy + z * cy;
+    var y2 = y * cp - z1 * sp;
+    var z2 = y * sp + z1 * cp;
+    var fov = 580;
+    var scale = (fov / (fov + z2 + 100)) * zoom;
+    return {
+      x: W * 0.5 + x1 * scale,
+      y: H * 0.48 + y2 * scale,
+      z: z2,
+      scale: scale
+    };
+  }
+
+  function renderFrame(stamp) {
+    var now = getClock(stamp);
+    var dt = lastStamp === null ? 16 : Math.min(64, Math.max(0, now - lastStamp));
+    lastStamp = now;
+
+    if (!paused) {
+      simTime += dt;
+      if (pointerCount === 0) targetYaw += 0.0022 * (dt / 16.667);
+    }
+    var ease = 0.16;
+    yaw += (targetYaw - yaw) * ease;
+    pitch += (targetPitch - pitch) * ease;
+    zoom += (targetZoom - zoom) * ease;
+
+    var baseR = 234;
+    var rings = [0, 92, 162, 234];
+
+    for (var rIdx = 1; rIdx <= 3; rIdx++) {
+      var d = '';
+      for (var step = 0; step <= 40; step++) {
+        var ang = (step / 40) * Math.PI * 2;
+        var pt = project(Math.cos(ang) * rings[rIdx], 0, Math.sin(ang) * rings[rIdx]);
+        d += (step === 0 ? 'M' : 'L') + pt.x.toFixed(1) + ' ' + pt.y.toFixed(1);
+      }
+      ringEls[rIdx - 1].setAttribute('d', d + 'Z');
+    }
+
+    var t = simTime * 0.00035;
+    var projected = [];
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      var rad = rings[n.ring];
+      var speed = n.ring === 0 ? 0 : (n.ring === 1 ? 0.8 : n.ring === 2 ? -0.45 : 0.25);
+      var a = n.angle + t * speed;
+      var p = project(Math.cos(a) * rad, n.y * baseR * 0.56, Math.sin(a) * rad);
+      p.item = nodeItems[i];
+      projected.push(p);
+    }
+
+    for (var e = 0; e < edges.length; e++) {
+      var from = projected[edges[e][0]];
+      var to = projected[edges[e][1]];
+      var isOuter = to.item.node.ring === 3;
+      var ln = edgeEls[e];
+      ln.setAttribute('x1', from.x.toFixed(1));
+      ln.setAttribute('y1', from.y.toFixed(1));
+      ln.setAttribute('x2', to.x.toFixed(1));
+      ln.setAttribute('y2', to.y.toFixed(1));
+      if (mode === 'alarm') {
+        ln.setAttribute('stroke', 'rgba(234, 67, 53, 0.52)');
+        ln.setAttribute('stroke-width', '2.4');
+      } else if (mode === 'ok' && !isOuter) {
+        ln.setAttribute('stroke', 'rgba(52, 168, 83, 0.6)');
+        ln.setAttribute('stroke-width', '2.4');
+      } else {
+        ln.setAttribute('stroke', 'rgba(66, 133, 244, 0.28)');
+        ln.setAttribute('stroke-width', '1.6');
+      }
+
+      var pc = pulseEls[e];
+      if (mode === 'alarm' || (mode === 'ok' && !isOuter) || (mode === 'idle' && e % 2 === 0)) {
+        var phase = ((simTime * (mode === 'alarm' ? 0.0014 : 0.0006)) + e * 0.23) % 1;
+        pc.setAttribute('cx', (from.x + (to.x - from.x) * phase).toFixed(1));
+        pc.setAttribute('cy', (from.y + (to.y - from.y) * phase).toFixed(1));
+        pc.setAttribute('r', mode === 'alarm' ? '5.0' : '3.8');
+        pc.setAttribute('fill', mode === 'alarm' ? '#EA4335' : mode === 'ok' ? '#34A853' : '#4285F4');
+        pc.removeAttribute('display');
+      } else {
+        pc.setAttribute('display', 'none');
+      }
+    }
+
+    var elapsed = (now - modeStart) * 0.001;
+    var order = projected.slice().sort(function (a, b) { return b.z - a.z; });
+    var orderKey = '';
+    for (var o = 0; o < order.length; o++) orderKey += order[o].item.idx + ',';
+    if (orderKey !== lastOrder) {
+      lastOrder = orderKey;
+      for (var k0 = 0; k0 < order.length; k0++) nodesG.appendChild(order[k0].item.g);
+    }
+
+    for (var k = 0; k < order.length; k++) {
+      var pItem = order[k];
+      var ni = pItem.item;
+      var nodeColor = ni.node.color;
+      if (mode === 'alarm' && ni.node.ring === 3) nodeColor = '#EA4335';
+      else if (mode === 'ok' && ni.node.id === 'device') nodeColor = '#34A853';
+      var radius = ni.node.r * pItem.scale;
+      var px = pItem.x.toFixed(1);
+      var py = pItem.y.toFixed(1);
+
+      if (mode === 'alarm' && (ni.node.ring === 3 || ni.node.ring === 0)) {
+        var pulse = (Math.sin(elapsed * 5 + k) + 1) * 0.5;
+        ni.halo.setAttribute('cx', px);
+        ni.halo.setAttribute('cy', py);
+        ni.halo.setAttribute('r', (radius + 5 + pulse * 10).toFixed(1));
+        ni.halo.setAttribute('fill', 'rgba(234, 67, 53, ' + (0.28 - pulse * 0.18).toFixed(2) + ')');
+        ni.halo.removeAttribute('display');
+      } else {
+        ni.halo.setAttribute('display', 'none');
+      }
+
+      ni.outer.setAttribute('cx', px);
+      ni.outer.setAttribute('cy', py);
+      ni.outer.setAttribute('r', (radius + 3.5).toFixed(1));
+
+      ni.core.setAttribute('cx', px);
+      ni.core.setAttribute('cy', py);
+      ni.core.setAttribute('r', radius.toFixed(1));
+      ni.core.setAttribute('fill', nodeColor);
+
+      ni.txt.setAttribute('x', px);
+      ni.txt.setAttribute('y', (pItem.y + radius + 17).toFixed(1));
+    }
+  }
+
+  function schedule() {
+    if (rafId) return;
+    rafId = requestAnimationFrame(function (stamp) {
+      rafId = 0;
+      renderFrame(stamp);
+      var settling = Math.abs(targetZoom - zoom) > 0.001 || Math.abs(targetYaw - yaw) > 0.001 || Math.abs(targetPitch - pitch) > 0.001;
+      if (!paused || settling) schedule();
+    });
+  }
+
+  function setMode(next) {
+    mode = next;
+    modeStart = getClock();
+    btnOk.classList.toggle('active', next === 'ok');
+    btnAlarm.classList.toggle('active', next === 'alarm');
+    if (next === 'ok') {
+      simDot.style.background = '#34A853';
+      simStatus.textContent = 'Safe check-in — watchers cleared silently';
+    } else if (next === 'alarm') {
+      simDot.style.background = '#EA4335';
+      simStatus.textContent = 'Silent alarm — encrypted alert reaching angels';
+    } else {
+      simDot.style.background = '#4285F4';
+      simStatus.textContent = 'Watchers active — holding no alarm';
+    }
+    if (paused) schedule();
+  }
+
+  btnOk.addEventListener('click', function () { setMode(mode === 'ok' ? 'idle' : 'ok'); });
+  btnAlarm.addEventListener('click', function () { setMode(mode === 'alarm' ? 'idle' : 'alarm'); });
+  if (btnToggle) {
+    btnToggle.addEventListener('click', function () {
+      paused = !paused;
+      lastStamp = null;
+      btnToggle.textContent = paused ? 'Play' : 'Pause';
+      btnToggle.setAttribute('aria-pressed', paused ? 'true' : 'false');
+      if (!paused) schedule();
+    });
+  }
+
+  function pinchDist() {
+    var ids = Object.keys(pointers);
+    if (ids.length < 2) return 0;
+    var a = pointers[ids[0]], b = pointers[ids[1]];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  box.addEventListener('pointerdown', function (e) {
+    var id = String(e.pointerId);
+    pointers[id] = { x: e.clientX, y: e.clientY };
+    pointerCount = Object.keys(pointers).length;
+    lastPinchDist = pointerCount >= 2 ? pinchDist() : 0;
+    try { box.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  window.addEventListener('pointermove', function (e) {
+    var id = String(e.pointerId);
+    if (!(id in pointers)) return;
+    var prev = pointers[id];
+    pointers[id] = { x: e.clientX, y: e.clientY };
+    if (pointerCount === 1) {
+      targetYaw += (e.clientX - prev.x) * 0.008;
+      targetPitch = Math.max(-0.9, Math.min(0.9, targetPitch + (e.clientY - prev.y) * 0.006));
+      if (paused) schedule();
+    } else if (pointerCount >= 2) {
+      var d = pinchDist();
+      if (lastPinchDist > 0 && d > 0) {
+        targetZoom = Math.max(0.65, Math.min(2.2, targetZoom * (d / lastPinchDist)));
+        if (paused) schedule();
+      }
+      lastPinchDist = d;
+    }
+  });
+  function releasePointer(e) {
+    var id = String(e.pointerId);
+    if (!(id in pointers)) return;
+    delete pointers[id];
+    pointerCount = Object.keys(pointers).length;
+    lastPinchDist = pointerCount >= 2 ? pinchDist() : 0;
+  }
+  window.addEventListener('pointerup', releasePointer);
+  window.addEventListener('pointercancel', releasePointer);
+
+  box.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var factor = Math.exp(-e.deltaY * 0.0015);
+    targetZoom = Math.max(0.65, Math.min(2.2, targetZoom * factor));
+    if (paused) schedule();
+  }, { passive: false });
+
+  box.addEventListener('dblclick', function () {
+    targetZoom = 1;
+    targetYaw = 0.45;
+    targetPitch = 0.40;
+    if (paused) schedule();
+  });
+
+  renderFrame(0);
+  schedule();
+})();
+</script>
+<script src="home.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+[package]
+name = "warn-watcher"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+warn-proto.workspace = true
+nostr-sdk.workspace = true
+nostr.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+bitcoin_hashes = "0.14"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+# Web Push (RFC 8291 encryption, RFC 8292 VAPID) to angels' phones.
+p256 = { version = "0.13", features = ["ecdh", "ecdsa"] }
+aes-gcm = "0.10"
+hkdf = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+rand_core = { version = "0.6", features = ["getrandom"] }

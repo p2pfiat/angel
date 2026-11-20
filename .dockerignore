@@ -1,0 +1,8 @@
+target/
+.git/
+data/
+*.key
+*.nsec
+config.toml
+webapp/
+node_modules/

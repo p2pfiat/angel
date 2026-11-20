@@ -1,0 +1,65 @@
+# Watcher configuration. Copy to <data_dir>/config.toml and edit.
+# Never commit the real file.
+
+data_dir = "/data"
+# Optional friendly name shown privately to watched devices in Sync (Settings -> Status).
+# name = "Home server"
+
+# Use several relays: any one of them is enough to receive a message.
+relays = [
+  "wss://relay.nostr.net",
+  "wss://nostr.oxtr.dev",
+  "wss://relay.snort.social",
+  "wss://offchain.pub",
+  "wss://nos.lol",
+  "wss://relay.primal.net",
+]
+
+# Seconds after a deadline before alarming (allows for network latency).
+grace_seconds = 10
+# Messages older than this are ignored (e.g. after a long outage).
+max_age_minutes = 30
+
+# Several watchers for the same contacts (a home server and the laptop's built-in one):
+# list the others' keys here, in each of them. A watcher that sent an alarm tells the others,
+# which then skip it, so contacts get it once. Only list watchers with the same contacts.
+# send_delay_seconds sets the order: 0 for the most reliable one, e.g. 10 for the rest.
+# peers = ["npub1..."]
+# send_delay_seconds = 0
+
+# New VIPs by invite (docs/design.md, "Step 2"): a VIP below can invite someone from the phone
+# app (Protect someone), and a new angel gets such a link in the welcome message when app_url
+# is set. Invited VIPs are kept in vips.json; `warn-watcher remove-vip NAME` stops watching one
+# (after a restart). They cannot invite others. At most 30 alarms a day each.
+# accept_invites = true
+# open_signup = false         # set true for a public courtesy starter watcher
+# max_invited_vips = 20
+# app_url = "https://example.github.io/app/"
+# owner_chats = [111111111]   # told when someone new is watched
+
+# Create a bot with @BotFather. Contacts must press Start (or write /id) once;
+# the bot replies with their chat id, which goes into telegram_chats below.
+# Omit this section to only log alarms (dry run).
+[telegram]
+bot_token = "123456789:replace-me"
+
+# One block per person this watcher protects.
+[[person]]
+name = "Alex"
+# Device keys printed by the agent's `init` command.
+# Contacts can also join with the person's link (`warn-watcher invite Alex`). All angels
+# (these chats and joined ones), their names and which alarms each gets are kept in
+# contacts.json next to this file and shared with the peers; edit them in the agent's Angels
+# window. invite_round = 1 makes the old link invalid.
+devices = ["npub1trl7y6nxegm5hg0qgqj2srdd59u8zy3p6klxeatapsnapnpsulqswnluue"]
+telegram_chats = [111111111]
+# Optional: shown under alerts; contacts tap it to call by phone or through Telegram.
+# phone = "+44 7700 900123"
+# Optional: duress from a phone shortcut via a secret ntfy topic (see docs/iphone.md).
+# duress_ntfy = [{ url = "https://ntfy.sh/<long random topic>", device = "iphone", cancel_seconds = 20 }]
+# (cancel_seconds: a duress from it waits this long; an "ok" in that time takes it back)
+
+# Optional: alert texts in your own language.
+# Placeholders: {name} {device} {trigger} {location} {note} {who}
+# [messages]
+# missed = """ALARM for {name} ..."""

@@ -1,0 +1,27 @@
+{
+  "watcher_secret_hex": "bf943db1b4138e02706243dc653e7dd78f441c30471e8c32b61df82e84c163a1",
+  "device_npub": "npub13suv0jz9a0an79q4xyd7s9g2ucr25x7aze53ma9g8nwzn06kz8us63c9jl",
+  "context": {
+    "device": "phone",
+    "trigger": "duress_app",
+    "location": "https://www.openstreetmap.org/?mlat=1&mlon=2"
+  },
+  "wrap": {
+    "kind": 1059,
+    "content": "Al9Ar1QKKDCJLokhf3ePWnXg1GAo/8VeRXCPiNitTZSK6vgSPmgVRMDbM2lp6Ot2TRTQKlZgQV1aUV7eBFJy70UKjsEfK8ayBTTrPxaxg8KxaBH5PKnsSvzcMNm07l6xOWjOeVXVyrL3+6vZs7ieNz88Af0nhqdaXgV+gfNWcDtUX8tsBWPjSVBfadiW1HZHYgLuAaltTFlGkkqbQ7Jz1nCWBK57rNeqd2DrWk1pNk5pTXqpXI8LS5F9ENv9i5qxVe01bLmLPrcnVxbCZm/OdU0IxfPewBekgMs1oCfKaHHSDiZubhxvPNihCT3Sda1fBepQeGpO7/5Wl39syKxwFXYFeSjUH7qjlsCpcQdCDrlISCcA3vWePz12Z2vVIezXNCBJhw17f6uXczLQCqbHZzolwvi3h9DyqlqUf0dsVdrlRAj/KQG5a6vVSJ590mn8CFqw5teMeT/9UWjT67PUR1j4O0fj47f7qu/P5uHNS2XOCvF9EXw+U7uDKYlrpXGauAdNsHMT0hWPLagVmaBF7PiDJDmCXzUtWs69PDbQh2UkCg+LZlNi+ix630+Hoo+eLcrnxDnorKseU6h1luMB0m668Yqgq13CLVjWtm9pbpQ+HsOfhdkxaISRLP93k9ih9RWA+EzsrkFoa5OUoZvFq2GLVnx5WRRs2ONdRoqmLL/jz4+kTQc2/7jK9g8RsJ8WV8aam70NSuYTaM13CG+K+M8nnxEGDckZiJhoT2iUsipk37qyA+Sxx3Mgu2OnPQ9euj8sDCR0SShUjgBOo1scMYEhrtTE7pY2tqFyBYtdcvom+Kb281m8HktRZm0ItOko7/SrZSLkiOUgD11n8K8hXzqcDQS+qWd2CLddHDarzcB2PYQXYGRdpdNke5RYudtel+Eju7y15iSes8x3pfeW6Q+ie470rF6YO/gEzqP6sPblSJ4VezNbT7p8L/ouIMdq25M+qpkTJUPPHV+oWvLorNLU86YjXg4LtWlaImxfO85e1Natr6+FG8CN3VPHPF5JvIrqCRE5U+PXRWKMQzvhVb2eFQGJCwGSSfPoUy2bK4mZw1pf/77MXXDOcAQlSQ5SYiXsSEu/gB1kmOXxV/8QVyXxkrBgPk4Ws+5owzqimNdEMG0gRHvUtrVI2ft6Q8zKQoY76CWSpzdOuPdRFK1WlcejoF/kgH1JGMrIkgJfF3ArGcMPoksjmI0GegnDHhvHqfJ664838j1SimEe1J3hPwsmK5dnF+0zx1oHqepquFSu47fLSWShAQA84oAF1GQu5IBwiO1//oHy+Jy+Jfzc/Gd6JR4/wtsxcbSLTBPHPdZRLU5gN9dMxbJ61zu9HXkLusGa1Rz6roT8fDVEPbc1p0mekkquMZwr66517s6Oxf/OFWI1MlmgtjW3kDhu1QgG2lrTT/kiMIl4wkOgAsyeUBt/1Ly9fRRDG755te+AG77in7Q=",
+    "created_at": 1795069932,
+    "tags": [
+      [
+        "p",
+        "dc045da2258bf72063362a0aae67c925f9de21227518273cb6278b53ac22abf0"
+      ],
+      [
+        "expiration",
+        "1795442551"
+      ]
+    ],
+    "pubkey": "4643e788861cc9c0c96a6255a012bba01727e3f9245fd9d6b1a8d551e7e7fb73",
+    "id": "9b9dff6cab1f32d854776ebe14dd352447b3ed1ddb00c8ce64031a4d44841870",
+    "sig": "1b7414a1361fbe1a19e3f101e956633b29dbaf690889431e164c592e135a92e322a6eba57c798a604b4e728b7d1fe0543c73f12c7ba63ea0f0a92d9e7037793c"
+  }
+}

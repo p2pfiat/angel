@@ -1,0 +1,21 @@
+{
+  "secret": "AAAAAAAAAAAAAAAAAAAAAA",
+  "event": {
+    "kind": 30078,
+    "created_at": 1795183351,
+    "tags": [
+      [
+        "d",
+        "warn-invite"
+      ],
+      [
+        "expiration",
+        "4000000000"
+      ]
+    ],
+    "content": "AhsvTHJT8tu7WTavvaKgyzHV8IT0NSAZj6qMcc25TCXpJpLZHSVZ2i0Gz/TO2yIDUVnEYMZmQCgxPVcDnJe7LIqsNYLoEFgsU3lCYHpNpe+RHd2zCEFMlrarCb/LklWUr2DNk9scL0JdqbyxWgDxnjsqaFqw2Tq3MrsrLwIcNpRshp6IfHlTLv9Q7+U+cB2JL/JQh2dtt8TYVYuHlndIh5TfcZgTrLEmNFsFuMx3UwR0wsErKBVKeEruwmx1eZBQzslp",
+    "pubkey": "45d4a511accca6188fcb43b33e5c61e51901eda7aece0d51e934d9d06b253775",
+    "id": "a4f25a4b63997e483248bc25af27464140c6ce4403c868f4668c991ad619d545",
+    "sig": "3a985d4fabb63db9308677f7e8a04d6422aa739815da92d0b895166ceed8820ffdff2b598178ea6d3f63d0fe9277fdb3a659ac37f113c1c01b4c64015a0a371e"
+  }
+}

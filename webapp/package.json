@@ -1,0 +1,17 @@
+{
+  "name": "warn-webapp",
+  "private": true,
+  "type": "module",
+  "description": "Phone duress app: sends the same encrypted duress message as the desktop agent.",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --minify --format=iife --target=safari15 --outfile=app.js && esbuild src/home.js --bundle --minify --format=iife --target=safari15 --outfile=home.js",
+    "test": "node test/interop.mjs"
+  },
+  "dependencies": {
+    "nostr-tools": "2.25.2",
+    "qrcode-generator": "2.0.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

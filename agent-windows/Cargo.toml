@@ -1,0 +1,39 @@
+[package]
+name = "warn-agent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+warn-proto.workspace = true
+warn-watcher.workspace = true
+nostr-sdk.workspace = true
+nostr.workspace = true
+tokio = { workspace = true, features = ["process"] }
+serde.workspace = true
+toml.workspace = true
+# Edit the config from the settings window without losing its comments.
+toml_edit = "0.22"
+anyhow.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+rand = "0.9"
+
+[target.'cfg(windows)'.dependencies]
+# QR code for "Add a phone" (drawn with GDI).
+qrcode = { version = "0.14", default-features = false }
+# WinRT location API (Windows.Devices.Geolocation).
+windows = { version = "0.62", features = ["Devices_Geolocation", "Foundation", "Win32_System_WinRT"] }
+windows-sys = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_Security",
+  "Win32_System_Console",
+  "Win32_Media_Audio",
+  "Win32_System_LibraryLoader",
+  "Win32_System_RemoteDesktop",
+  "Win32_System_Threading",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_WindowsAndMessaging",
+] }
